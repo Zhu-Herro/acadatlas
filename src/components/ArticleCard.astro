@@ -1,0 +1,60 @@
+---
+/**
+ * ArticleCard — used inside grids on /guides and in "related articles".
+ * Same visual language as SystemCard: hairline rules, no shadows.
+ */
+import { formatDate, useTranslations, type Locale } from '@/i18n/utils';
+
+interface Props {
+  title: string;
+  summary: string;
+  href: string;
+  category: string;
+  readingMinutes: number;
+  updatedAt: Date;
+  locale: Locale;
+  /** Optional cross-referenced systems, e.g. "DSE × IB". */
+  systems?: string[];
+  class?: string;
+}
+
+const {
+  title,
+  summary,
+  href,
+  category,
+  readingMinutes,
+  updatedAt,
+  locale,
+  systems = [],
+  class: className = '',
+} = Astro.props;
+
+const t = useTranslations(locale);
+---
+
+<article
+  data-reveal="up"
+  class:list={['group flex flex-col border-t border-rule pt-6', className]}
+>
+  <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+    <span class="font-mono text-micro uppercase tracking-[0.14em] text-accent">{category}</span>
+    {systems.length > 0 && (
+      <span class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+        {systems.join(' × ')}
+      </span>
+    )}
+  </div>
+
+  <h3 class="mt-4 font-display text-h3 text-ink">
+    <a href={href} class="transition-colors duration-300 hover:text-accent">{title}</a>
+  </h3>
+
+  <p class="mt-3 flex-1 text-caption leading-relaxed text-charcoal">{summary}</p>
+
+  <p class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1.5 font-mono text-micro text-mist">
+    <span>{formatDate(updatedAt, locale)}</span>
+    <span aria-hidden="true" class="text-rule">·</span>
+    <span>{t('common.readingMinutes', { minutes: readingMinutes })}</span>
+  </p>
+</article>

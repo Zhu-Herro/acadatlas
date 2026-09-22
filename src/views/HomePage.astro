@@ -1,0 +1,347 @@
+---
+/**
+ * Home page.
+ *
+ * Narrative order (brief, sections 7 / 31):
+ *   Hero → intro → 01 Education systems → Education map →
+ *   02 Explore systems → 03 Pathways → 04 Guides → 05 Explore (search) →
+ *   closing statement
+ *
+ * The page reads as one story rather than a list of articles: each block ends
+ * by pointing at the next.
+ */
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Hero from '@/components/Hero.astro';
+import SectionHeader from '@/components/SectionHeader.astro';
+import EducationChain from '@/components/EducationChain.astro';
+import PathwayDiagram from '@/components/PathwayDiagram.astro';
+import SystemCard from '@/components/SystemCard.astro';
+import EditorialList from '@/components/EditorialList.astro';
+import { site } from '@/site.config';
+import { entrySlug, inLocale, sortEntries } from '@/lib/content';
+import { localizePath, useTranslations, type Locale } from '@/i18n/utils';
+import { buildSeo } from '@/lib/seo';
+import type { UIKey } from '@/i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const systems = sortEntries(inLocale(await getCollection('systems'), locale));
+const guides = sortEntries(inLocale(await getCollection('guides'), locale));
+
+const featuredSystems = systems.filter((entry) => entry.data.featured).slice(0, 3);
+const shownSystems = featuredSystems.length > 0 ? featuredSystems : systems.slice(0, 3);
+const featuredGuides = guides.filter((entry) => entry.data.featured).slice(0, 4);
+const shownGuides = featuredGuides.length > 0 ? featuredGuides : guides.slice(0, 4);
+
+const href = (base: string, slug: string) => localizePath(`${base}/${slug}`, locale);
+
+/** Category taxonomy — brief, section 8: never conflate these four things. */
+const taxonomy: { key: UIKey; noteKey: UIKey }[] = [
+  { key: 'systems.group.curriculum', noteKey: 'systems.group.curriculum.note' },
+  { key: 'systems.group.exam', noteKey: 'systems.group.exam.note' },
+  { key: 'systems.group.language', noteKey: 'systems.group.language.note' },
+  { key: 'systems.group.admission', noteKey: 'systems.group.admission.note' },
+];
+
+const seo = buildSeo({
+  title: site.name,
+  description: site.description[locale],
+  locale,
+  path: '/',
+});
+---
+
+<BaseLayout locale={locale} seo={seo}>
+  <Hero locale={locale} />
+
+  <!-- ── Intro: one connected information system ─────────────────────── -->
+  <section class="u-section edge-rule" aria-labelledby="intro-title">
+    <div class="u-container">
+      <div class="grid gap-12 lg:grid-cols-12 lg:gap-x-16">
+        <div class="lg:col-span-5">
+          <p data-reveal="fade" class="eyebrow eyebrow-accent">{t('home.intro.label')}</p>
+          <h2
+            id="intro-title"
+            data-stagger
+            class="mt-7 font-display text-h1 text-ink"
+          >
+            <span class="block">{t('home.intro.title1')}</span>
+            <span class="block">{t('home.intro.title2')}</span>
+          </h2>
+        </div>
+
+        <div class="lg:col-span-7 lg:pt-4">
+          <p data-reveal="up" class="max-w-2xl text-lead text-charcoal">
+            {t('home.intro.body')}
+          </p>
+
+          <ul class="mt-12 grid gap-x-8 gap-y-6 sm:grid-cols-3">
+            {
+              ['home.intro.point1', 'home.intro.point2', 'home.intro.point3'].map(
+                (key, index) => (
+                  <li
+                    data-reveal="up"
+                    style={`--reveal-delay:${index * 80}ms`}
+                    class="border-t border-rule pt-4"
+                  >
+                    <span class="font-mono text-micro text-accent tabnum">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <p class="mt-3 text-h4 text-ink">{t(key as UIKey)}</p>
+                  </li>
+                ),
+              )
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 01 / Education systems — the typographic index plate ────────── -->
+  <section class="u-section edge-rule" aria-labelledby="systems-plate-title">
+    <div class="u-container">
+      <SectionHeader
+        number="01"
+        label={t('home.s1.label')}
+        title={[t('home.s1.title1'), t('home.s1.title2')]}
+        lede={t('home.s1.body')}
+        id="systems-plate-title"
+      />
+
+      <!-- The five systems, set as one visual plate rather than five cards -->
+      <ol class="mt-16 flex flex-col border-t border-rule" data-stagger>
+        {
+          systems.map((entry, index) => (
+            <li class="border-b border-rule">
+              <a
+                href={href('/systems', entrySlug(entry))}
+                class="group grid grid-cols-1 items-baseline gap-x-8 gap-y-3 py-6 sm:grid-cols-[3rem_minmax(0,1fr)_auto] lg:py-7"
+              >
+                <span class="font-mono text-micro text-mist tabnum">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <span class="flex flex-wrap items-baseline gap-x-6 gap-y-2">
+                  <span class="font-display text-h2 leading-none text-ink transition-colors duration-300 group-hover:text-accent">
+                    {entry.data.shortName}
+                  </span>
+                  <span class="max-w-md text-caption text-graphite">{entry.data.summary}</span>
+                </span>
+                <span
+                  aria-hidden="true"
+                  class="font-mono text-caption text-mist transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1.5 group-hover:text-accent"
+                >
+                  →
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+
+      <!-- Information architecture note: four categories, never merged -->
+      <div class="mt-20">
+        <h3 data-reveal="fade" class="eyebrow">{t('systems.grouping')}</h3>
+        <ul class="mt-8 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+          {
+            taxonomy.map((item, index) => (
+              <li
+                data-reveal="up"
+                style={`--reveal-delay:${index * 70}ms`}
+                class="border-t border-rule pt-5"
+              >
+                <p class="text-h4 text-ink">{t(item.key)}</p>
+                <p class="mt-2.5 text-caption leading-relaxed text-graphite">{t(item.noteKey)}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Education map ──────────────────────────────────────────────── -->
+  <section class="u-section edge-rule" aria-labelledby="map-title">
+    <div class="u-container">
+      <SectionHeader
+        number="01.5"
+        label={t('home.s2.label')}
+        title={t('home.s2.title')}
+        lede={t('home.s2.body')}
+        id="map-title"
+      />
+      <div class="mt-16">
+        <EducationChain locale={locale} />
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 02 / Explore systems ───────────────────────────────────────── -->
+  <section class="u-section edge-rule" aria-labelledby="explore-systems-title">
+    <div class="u-container">
+      <SectionHeader
+        number="02"
+        label={t('systems.title')}
+        title={t('systems.title')}
+        lede={t('systems.lede')}
+        id="explore-systems-title"
+      />
+
+      <div class="mt-16 grid gap-x-12 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+        {
+          shownSystems.map((entry, index) => (
+            <SystemCard
+              name={entry.data.title}
+              shortName={entry.data.shortName}
+              fullName={entry.data.fullName}
+              summary={entry.data.summary}
+              region={entry.data.region}
+              type={entry.data.type}
+              href={href('/systems', entrySlug(entry))}
+              locale={locale}
+              index={index}
+            />
+          ))
+        }
+      </div>
+
+      <p class="mt-14">
+        <a
+          href={localizePath('/systems', locale)}
+          class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
+        >
+          {t('common.viewAll')} →
+        </a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ── 03 / Pathways ──────────────────────────────────────────────── -->
+  <section class="u-section edge-rule" aria-labelledby="pathways-title">
+    <div class="u-container">
+      <SectionHeader
+        number="03"
+        label={t('pathways.title')}
+        title={[t('home.s3.title1'), t('home.s3.title2')]}
+        lede={t('home.s3.body')}
+        id="pathways-title"
+      />
+      <div class="mt-16">
+        <PathwayDiagram locale={locale} />
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 04 / Guides ────────────────────────────────────────────────── -->
+  <section class="u-section edge-rule" aria-labelledby="guides-title">
+    <div class="u-container">
+      <SectionHeader
+        number="04"
+        label={t('guides.title')}
+        title={[t('home.s4.title1'), t('home.s4.title2')]}
+        lede={t('home.s4.lede')}
+        id="guides-title"
+      />
+
+      <EditorialList
+        class="mt-16"
+        locale={locale}
+        emphasis="large"
+        items={shownGuides.map((entry) => ({
+          href: href('/guides', entrySlug(entry)),
+          title: entry.data.title,
+          summary: entry.data.summary,
+          meta: [t('common.readingMinutes', { minutes: entry.data.readingMinutes })],
+        }))}
+      />
+
+      <p class="mt-12">
+        <a
+          href={localizePath('/guides', locale)}
+          class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
+        >
+          {t('common.viewAll')} →
+        </a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ── 05 / Explore (search) ──────────────────────────────────────── -->
+  <section class="u-section edge-rule" aria-labelledby="search-entry-title">
+    <div class="u-container">
+      <div class="grid gap-12 lg:grid-cols-12 lg:gap-x-16">
+        <div class="lg:col-span-5">
+          <p data-reveal="fade" class="eyebrow eyebrow-accent">{t('home.s5.label')}</p>
+          <h2 id="search-entry-title" data-stagger class="mt-7 font-display text-h1 text-ink">
+            <span class="block">{t('home.s5.title1')}</span>
+            <span class="block">{t('home.s5.title2')}</span>
+          </h2>
+        </div>
+
+        <div class="lg:col-span-7 lg:pt-6">
+          <p data-reveal="up" class="max-w-xl text-lead text-charcoal">{t('home.s5.body')}</p>
+
+          <button
+            type="button"
+            data-search-open
+            class="group mt-10 flex w-full max-w-xl items-center gap-5 border border-rule px-5 py-4 text-left transition-colors duration-500 hover:border-ink"
+          >
+            <svg class="h-4 w-4 shrink-0 text-mist" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <circle cx="6.8" cy="6.8" r="4.9" stroke="currentColor" stroke-width="1.3" />
+              <path d="M10.6 10.6 14.4 14.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+            </svg>
+            <span class="flex-1 text-caption text-mist">{t('search.placeholder')}</span>
+            <span class="font-mono text-micro uppercase tracking-[0.16em] text-accent">
+              {t('home.s5.cta')}
+            </span>
+          </button>
+
+          <ul class="mt-10 flex flex-wrap gap-x-8 gap-y-3">
+            {
+              ['/systems', '/exams', '/pathways', '/guides', '/resources'].map((path) => (
+                <li>
+                  <a
+                    href={localizePath(path, locale)}
+                    class="font-mono text-micro uppercase tracking-[0.14em] text-graphite transition-colors duration-300 hover:text-accent"
+                  >
+                    {path}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Closing statement ──────────────────────────────────────────── -->
+  <section class="edge-rule" aria-label={site.tagline[locale]}>
+    <div class="u-container py-24 lg:py-32">
+      <p data-reveal="up" class="eyebrow">
+        {site.name}
+      </p>
+      <p
+        data-reveal="up"
+        style="--reveal-delay:120ms"
+        class="mt-8 max-w-4xl font-display text-display text-ink"
+      >
+        {site.tagline[locale]}
+      </p>
+      <p data-reveal="up" style="--reveal-delay:220ms" class="mt-10">
+        <a
+          href={localizePath('/about', locale)}
+          class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
+        >
+          {t('about.title')} →
+        </a>
+      </p>
+    </div>
+  </section>
+</BaseLayout>

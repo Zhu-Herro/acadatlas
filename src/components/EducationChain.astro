@@ -1,0 +1,54 @@
+---
+/**
+ * EducationChain — "Student → System → Subjects → Assessment → University →
+ * Career". Rendered as an HTML list rather than an SVG so it stays readable,
+ * selectable and accessible at every width.
+ */
+import { educationChain } from '@/data/educationChain';
+import { useTranslations, type Locale } from '@/i18n/utils';
+
+interface Props {
+  locale: Locale;
+  class?: string;
+}
+
+const { locale, class: className = '' } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<div class:list={[className]}>
+  <ol class="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-6 lg:gap-x-5">
+    {
+      educationChain.map((step, index) => (
+        <li class="relative border-t border-rule pt-6">
+          {/* Accent tick marking the chain position */}
+          <span
+            aria-hidden="true"
+            class="absolute -top-px left-0 h-px w-9 bg-accent"
+          />
+
+          <span class="font-mono text-meta text-accent tabnum">
+            {String(index + 1).padStart(2, '0')}
+          </span>
+
+          <h3 class="mt-4 text-h4 leading-snug text-ink">{step.label[locale]}</h3>
+
+          <p class="mt-2.5 text-caption leading-relaxed text-graphite">{step.note[locale]}</p>
+
+          {index < educationChain.length - 1 && (
+            <span
+              aria-hidden="true"
+              class="absolute -right-3.5 top-5 hidden font-mono text-caption text-mist lg:block"
+            >
+              →
+            </span>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+
+  <p class="mt-10 border-t border-rule pt-5 font-mono text-micro uppercase tracking-[0.14em] text-mist">
+    {t('pathways.flowNote')}
+  </p>
+</div>

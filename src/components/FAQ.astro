@@ -1,0 +1,42 @@
+---
+/**
+ * FAQ — native <details>/<summary>, so it works without JavaScript and is
+ * announced correctly by screen readers. The same data is emitted as a
+ * FAQPage JSON-LD node by the page.
+ */
+interface Props {
+  items: { q: string; a: string }[];
+  class?: string;
+}
+
+const { items, class: className = '' } = Astro.props;
+---
+
+<ul class:list={['flex flex-col border-t border-rule', className]}>
+  {
+    items.map((item, index) => (
+      <li class="border-b border-rule">
+        <details class="group">
+          <summary class="flex cursor-pointer list-none items-start gap-5 py-6 [&::-webkit-details-marker]:hidden">
+            <span class="mt-1 font-mono text-micro text-accent tabnum">
+              {String(index + 1).padStart(2, '0')}
+            </span>
+            <span class="flex-1 text-h4 text-ink transition-colors duration-300 group-hover:text-accent">
+              {item.q}
+            </span>
+            <span
+              aria-hidden="true"
+              class="mt-1.5 relative h-3 w-3 shrink-0"
+            >
+              <span class="absolute left-0 top-1/2 h-px w-3 -translate-y-1/2 bg-graphite"></span>
+              <span class="absolute left-0 top-1/2 h-px w-3 origin-center -translate-y-1/2 rotate-90 bg-graphite transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-open:rotate-0"></span>
+            </span>
+          </summary>
+          <div class="pb-7 pl-10 pr-8">
+            <p class="max-w-2xl text-body leading-relaxed text-charcoal">{item.a}</p>
+          </div>
+        </details>
+      </li>
+    ))
+  }
+</ul>

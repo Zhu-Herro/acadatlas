@@ -1,0 +1,207 @@
+---
+/**
+ * /about — what the platform is, what it refuses to do, and where it is going.
+ *
+ * The principles block is not decoration: it is the public statement of the
+ * editorial rules that the content schema enforces (brief, sections 24 & 33).
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import Timeline from '@/components/Timeline.astro';
+import { site } from '@/site.config';
+import { localizePath, useTranslations, type Locale } from '@/i18n/utils';
+import { breadcrumbSchema, organizationSchema, buildSeo } from '@/lib/seo';
+import type { UIKey } from '@/i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const principles: { titleKey: UIKey; bodyKey: UIKey }[] = [
+  { titleKey: 'about.principle1.title', bodyKey: 'about.principle1.body' },
+  { titleKey: 'about.principle2.title', bodyKey: 'about.principle2.body' },
+  { titleKey: 'about.principle3.title', bodyKey: 'about.principle3.body' },
+  { titleKey: 'about.principle4.title', bodyKey: 'about.principle4.body' },
+];
+
+/** Roadmap: phase one ships; the rest is planned and structurally reserved. */
+const roadmap: { titleKey: UIKey; noteKey: UIKey; active: boolean }[] = [
+  { titleKey: 'roadmap.compare', noteKey: 'roadmap.compare.note', active: true },
+  { titleKey: 'roadmap.regions', noteKey: 'roadmap.regions.note', active: false },
+  { titleKey: 'roadmap.selector', noteKey: 'roadmap.selector.note', active: false },
+  { titleKey: 'roadmap.universities', noteKey: 'roadmap.universities.note', active: false },
+  { titleKey: 'roadmap.schools', noteKey: 'roadmap.schools.note', active: false },
+  { titleKey: 'roadmap.planner', noteKey: 'roadmap.planner.note', active: false },
+  { titleKey: 'roadmap.assessment', noteKey: 'roadmap.assessment.note', active: false },
+  { titleKey: 'roadmap.aiAssistant', noteKey: 'roadmap.aiAssistant.note', active: false },
+  { titleKey: 'roadmap.aiMaterials', noteKey: 'roadmap.aiMaterials.note', active: false },
+  { titleKey: 'roadmap.consulting', noteKey: 'roadmap.consulting.note', active: false },
+  { titleKey: 'roadmap.membership', noteKey: 'roadmap.membership.note', active: false },
+  { titleKey: 'roadmap.products', noteKey: 'roadmap.products.note', active: false },
+];
+
+const seo = buildSeo({
+  title: t('about.title'),
+  description: t('about.lede'),
+  locale,
+  path: '/about',
+  jsonLd: [
+    organizationSchema(),
+    breadcrumbSchema(
+      [
+        { name: t('common.home'), path: '/' },
+        { name: t('about.title'), path: '/about' },
+      ],
+      locale,
+    ),
+  ],
+});
+---
+
+<BaseLayout locale={locale} seo={seo}>
+  <PageHeader
+    locale={locale}
+    number="06"
+    eyebrow={t('about.title')}
+    title={[site.name, t('about.title')]}
+    lede={t('about.lede')}
+    crumbs={[
+      { name: t('common.home'), path: '/' },
+      { name: t('about.title'), path: '/about' },
+    ]}
+  />
+
+  <!-- ── Mission ───────────────────────────────────────────────────── -->
+  <section class="edge-rule" aria-labelledby="mission-title">
+    <div class="u-container u-section">
+      <div class="grid gap-12 lg:grid-cols-12 lg:gap-x-16">
+        <div class="lg:col-span-4">
+          <h2 id="mission-title" data-reveal="fade" class="eyebrow eyebrow-accent">
+            {t('about.missionTitle')}
+          </h2>
+        </div>
+        <div class="lg:col-span-8">
+          <p data-reveal="up" class="max-w-2xl text-lead text-charcoal">
+            {t('about.missionBody')}
+          </p>
+
+          <p
+            data-reveal="up"
+            style="--reveal-delay:120ms"
+            class="mt-12 max-w-3xl font-display text-h2 text-ink"
+          >
+            {site.tagline[locale]}
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Principles ────────────────────────────────────────────────── -->
+  <section class="edge-rule" aria-labelledby="principles-title">
+    <div class="u-container u-section">
+      <h2 id="principles-title" data-reveal="fade" class="eyebrow eyebrow-accent">
+        {t('about.principlesTitle')}
+      </h2>
+
+      <ul class="mt-14 grid gap-x-10 gap-y-12 sm:grid-cols-2">
+        {
+          principles.map((principle, index) => (
+            <li
+              data-reveal="up"
+              style={`--reveal-delay:${index * 70}ms`}
+              class="border-t border-rule pt-6"
+            >
+              <span class="font-mono text-micro text-accent tabnum">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <h3 class="mt-4 text-h3 text-ink">{t(principle.titleKey)}</h3>
+              <p class="mt-3 max-w-lg text-caption leading-relaxed text-graphite">
+                {t(principle.bodyKey)}
+              </p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- ── Roadmap ───────────────────────────────────────────────────── -->
+  <section class="edge-rule" aria-labelledby="roadmap-title">
+    <div class="u-container u-section">
+      <div class="grid gap-12 lg:grid-cols-12 lg:gap-x-16">
+        <div class="lg:col-span-4">
+          <h2 id="roadmap-title" data-reveal="fade" class="eyebrow eyebrow-accent">
+            {t('about.roadmapTitle')}
+          </h2>
+          <p data-reveal="up" class="mt-6 max-w-xs text-caption leading-relaxed text-graphite">
+            {t('about.roadmapBody')}
+          </p>
+        </div>
+
+        <div class="lg:col-span-8">
+          <Timeline
+            entries={roadmap.map((item, index) => ({
+              marker: `PHASE ${String(index + 1).padStart(2, '0')}`,
+              title: t(item.titleKey),
+              body: t(item.noteKey),
+              active: item.active,
+            }))}
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Technical note + contact ──────────────────────────────────── -->
+  <section class="edge-rule" aria-labelledby="stack-title">
+    <div class="u-container u-section">
+      <div class="grid gap-12 lg:grid-cols-12 lg:gap-x-16">
+        <div class="lg:col-span-4">
+          <h2 id="stack-title" data-reveal="fade" class="eyebrow">
+            {t('about.stackTitle')}
+          </h2>
+        </div>
+        <div class="lg:col-span-8">
+          <p data-reveal="up" class="max-w-2xl text-body-lg leading-relaxed text-charcoal">
+            {t('about.stackBody')}
+          </p>
+
+          <dl class="mt-10 flex flex-col border-t border-rule">
+            {
+              [
+                { label: t('about.contactTitle'), value: site.contact.email },
+                { label: t('common.region'), value: t('pathways.destinations') },
+              ].map((row) => (
+                <div class="grid grid-cols-[minmax(0,9rem)_1fr] gap-6 border-b border-rule py-4">
+                  <dt class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                    {row.label}
+                  </dt>
+                  <dd class="meta-mono text-charcoal">{row.value}</dd>
+                </div>
+              ))
+            }
+          </dl>
+
+          <p class="mt-10 flex flex-wrap items-baseline gap-x-8 gap-y-3">
+            <a
+              href={localizePath('/contact', locale)}
+              class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
+            >
+              {t('contact.title')} →
+            </a>
+            <a
+              href={localizePath('/resources', locale)}
+              class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
+            >
+              {t('resources.title')} →
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

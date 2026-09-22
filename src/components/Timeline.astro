@@ -1,0 +1,56 @@
+---
+/**
+ * Timeline — vertical, hairline-ruled sequence.
+ * Used for the platform roadmap on /about and for planning sequences in guides.
+ */
+interface Entry {
+  /** Mono marker, e.g. "PHASE 01", "2026", "G10". */
+  marker: string;
+  title: string;
+  body?: string;
+  /** Highlight the entry as already available. */
+  active?: boolean;
+}
+
+interface Props {
+  entries: Entry[];
+  class?: string;
+}
+
+const { entries, class: className = '' } = Astro.props;
+---
+
+<ol class:list={['relative flex flex-col', className]}>
+  {
+    entries.map((entry, index) => (
+      <li data-reveal="up" style={`--reveal-delay:${index * 70}ms`} class="relative grid grid-cols-[auto_1fr] gap-x-6 pb-10 last:pb-0">
+        {/* Rail */}
+        <div class="relative flex w-4 justify-center">
+          <span
+            aria-hidden="true"
+            class:list={[
+              'absolute top-2 h-2 w-2 rounded-full',
+              entry.active ? 'bg-accent' : 'bg-rule',
+            ]}
+          />
+          {index < entries.length - 1 && (
+            <span aria-hidden="true" class="absolute left-1/2 top-6 h-full w-px -translate-x-1/2 bg-rule" />
+          )}
+        </div>
+
+        <div class="pb-1">
+          <span
+            class:list={[
+              'font-mono text-micro uppercase tracking-[0.16em] tabnum',
+              entry.active ? 'text-accent' : 'text-mist',
+            ]}
+          >
+            {entry.marker}
+          </span>
+          <h3 class="mt-2.5 text-h4 text-ink">{entry.title}</h3>
+          {entry.body && <p class="mt-2 max-w-lg text-caption leading-relaxed text-graphite">{entry.body}</p>}
+        </div>
+      </li>
+    ))
+  }
+</ol>

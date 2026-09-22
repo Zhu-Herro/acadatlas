@@ -1,0 +1,57 @@
+---
+/**
+ * Breadcrumb trail. Renders a visible trail; the matching BreadcrumbList
+ * JSON-LD node is produced by `src/lib/seo.ts` and injected via the page's
+ * SEO payload, so the visible and machine-readable versions can never drift.
+ */
+import { localizePath, type Locale } from '@/i18n/utils';
+
+export interface Crumb {
+  name: string;
+  /** Locale-agnostic path. */
+  path: string;
+}
+
+interface Props {
+  items: Crumb[];
+  locale: Locale;
+  /** Accessible label for the <nav> element. */
+  label: string;
+}
+
+const { items, locale, label } = Astro.props;
+---
+
+<nav aria-label={label}>
+  <ol class="flex flex-wrap items-baseline gap-x-2 gap-y-1.5">
+    {
+      items.map((item, index) => {
+        const isLast = index === items.length - 1;
+        return (
+          <li class="flex items-baseline gap-2">
+            {isLast ? (
+              <span
+                aria-current="page"
+                class="font-mono text-micro uppercase tracking-[0.14em] text-ink"
+              >
+                {item.name}
+              </span>
+            ) : (
+              <a
+                href={localizePath(item.path, locale)}
+                class="font-mono text-micro uppercase tracking-[0.14em] text-graphite transition-colors duration-300 hover:text-accent"
+              >
+                {item.name}
+              </a>
+            )}
+            {!isLast && (
+              <span aria-hidden="true" class="font-mono text-micro text-rule">
+                /
+              </span>
+            )}
+          </li>
+        );
+      })
+    }
+  </ol>
+</nav>

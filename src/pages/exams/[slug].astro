@@ -1,0 +1,20 @@
+---
+/**
+ * `/exams/[slug]` — qualification & language test detail pages.
+ * Uses the SAME template component as `/systems/[slug]`; only the view model
+ * builder differs.
+ */
+import type { GetStaticPaths } from 'astro';
+import { getCollection } from 'astro:content';
+import { collectSlugs } from '@/lib/content';
+import ProfilePage from '@/views/ProfilePage.astro';
+
+export const getStaticPaths = (async () => {
+  const entries = await getCollection('exams');
+  return collectSlugs(entries).map((slug) => ({ params: { slug } }));
+}) satisfies GetStaticPaths;
+
+const { slug } = Astro.params as { slug: string };
+---
+
+<ProfilePage kind="exam" slug={slug} locale="zh" />

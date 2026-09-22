@@ -1,0 +1,82 @@
+---
+/**
+ * /compare — the comparison tool.
+ *
+ * The dataset is assembled on the server from the `systems` collection and
+ * handed to the client controller as JSON, so the tool never needs a network
+ * round trip and the content architecture keeps a single source of truth.
+ */
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import CompareTool from '@/components/CompareTool.astro';
+import { toComparisonRecord } from '@/lib/profile';
+import { inLocale, sortEntries } from '@/lib/content';
+import { comparisonDimensions } from '@/data/dimensions';
+import { useTranslations, type Locale } from '@/i18n/utils';
+import { breadcrumbSchema, buildSeo } from '@/lib/seo';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const systems = sortEntries(inLocale(await getCollection('systems'), locale));
+const records = systems.map((entry) => toComparisonRecord(entry, locale));
+
+const seo = buildSeo({
+  title: t('compare.title'),
+  description: t('compare.lede'),
+  locale,
+  path: '/compare',
+  jsonLd: [
+    breadcrumbSchema(
+      [
+        { name: t('common.home'), path: '/' },
+        { name: t('compare.title'), path: '/compare' },
+      ],
+      locale,
+    ),
+  ],
+});
+---
+
+<BaseLayout locale={locale} seo={seo}>
+  <PageHeader
+    locale={locale}
+    number="08"
+    eyebrow={t('compare.title')}
+    title={[t('compare.title')]}
+    lede={t('compare.lede')}
+    crumbs={[
+      { name: t('common.home'), path: '/' },
+      { name: t('compare.title'), path: '/compare' },
+    ]}
+  >
+    <div slot="aside" class="mt-8 border-t border-rule pt-5">
+      <p class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+        {t('compare.dimensionsCount', { count: comparisonDimensions.length })}
+      </p>
+      <ol class="mt-4 flex flex-col gap-2">
+        {
+          comparisonDimensions.map((dimension, index) => (
+            <li class="flex items-baseline gap-3">
+              <span class="font-mono text-micro text-accent tabnum">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <span class="text-caption text-charcoal">{t(dimension.labelKey)}</span>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </PageHeader>
+
+  <section class="edge-rule">
+    <div class="u-container u-section">
+      <CompareTool records={records} locale={locale} />
+    </div>
+  </section>
+</BaseLayout>

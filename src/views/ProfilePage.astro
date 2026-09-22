@@ -1,0 +1,228 @@
+---
+/**
+ * ProfilePage — the shared template for system AND exam detail pages.
+ *
+ * One component renders /systems/dse, /systems/ib, /exams/sat … because both
+ * content types are normalised into the same `ProfileView` by
+ * `src/lib/profile.ts`. Adding a new content type later means writing one
+ * builder — not a new page template.
+ *
+ * Required structure (brief, section 11):
+ *   01 OVERVIEW · 02 STRUCTURE · 03 SUBJECTS · 04 ASSESSMENT ·
+ *   05 UNIVERSITY PATHWAYS · 06 WHO IS IT FOR? · 07 COMPARE · 08 FAQ ·
+ *   09 SOURCES
+ * The exam variant swaps 03–05 for CONTENT / SCORING / RECOGNITION.
+ */
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ProfileSection from '@/components/ProfileSection.astro';
+import Breadcrumb, { type Crumb } from '@/components/Breadcrumb.astro';
+import { site } from '@/site.config';
+import { buildExamProfile, buildSystemProfile, type ProfileView } from '@/lib/profile';
+import { collectSlugs, inLocale, resolveWithFallback } from '@/lib/content';
+import { formatDate, localizePath, useTranslations, type Locale } from '@/i18n/utils';
+import { articleSchema, breadcrumbSchema, buildSeo, faqSchema } from '@/lib/seo';
+
+interface Props {
+  kind: 'system' | 'exam';
+  slug: string;
+  locale: Locale;
+}
+
+const { kind, slug, locale } = Astro.props;
+const t = useTranslations(locale);
+
+const isSystem = kind === 'system';
+const collectionName = isSystem ? 'systems' : 'exams';
+const basePath = isSystem ? '/systems' : '/exams';
+
+/* ── Load the entry, falling back to the default locale when a translation
+      has not been written yet. The page says so explicitly rather than
+      silently mixing languages. ─────────────────────────────────────────── */
+const allEntries = await getCollection(collectionName);
+const resolved = resolveWithFallback(allEntries, slug, locale);
+
+if (!resolved) {
+  return Astro.redirect(localizePath('/404', locale), 302);
+}
+
+const { entry, isFallback } = resolved;
+
+const systemEntries = isSystem
+  ? (allEntries as unknown as Awaited<ReturnType<typeof getCollection<'systems'>>>)
+  : await getCollection('systems');
+
+const siblingSlugs = collectSlugs(inLocale(systemEntries, locale));
+
+const view: ProfileView = isSystem
+  ? buildSystemProfile(entry as never, { locale, t, systemEntries, siblingSlugs })
+  : buildExamProfile(entry as never, { locale, t, systemEntries, siblingSlugs });
+
+/* ── SEO ──────────────────────────────────────────────────────────────── */
+const pagePath = `${basePath}/${view.slug}`;
+
+const crumbs: Crumb[] = [
+  { name: t('common.home'), path: '/' },
+  { name: isSystem ? t('systems.title') : t('exams.title'), path: basePath },
+  { name: view.shortName, path: pagePath },
+];
+
+const seo = buildSeo({
+  title: `${view.title} — ${view.fullName}`,
+  description: view.summary,
+  locale,
+  path: pagePath,
+  type: 'article',
+  modifiedTime: view.updatedAt,
+  jsonLd: [
+    articleSchema({
+      title: view.title,
+      description: view.summary,
+      path: pagePath,
+      locale,
+      modifiedTime: view.updatedAt,
+      section: isSystem ? t('systems.title') : t('exams.title'),
+      keywords: view.tags,
+    }),
+    breadcrumbSchema(
+      crumbs.map((crumb) => ({ name: crumb.name, path: crumb.path })),
+      locale,
+    ),
+    ...(view.faq.length > 0 ? [faqSchema(view.faq)] : []),
+  ],
+});
+
+/* ── Section progress, used by the in-page contents rail ──────────────── */
+const totalSections = view.sections.length;
+---
+
+<BaseLayout locale={locale} seo={seo}>
+  <!-- ── Profile hero ──────────────────────────────────────────────── -->
+  <header class="relative">
+    <div class="u-container pb-14 pt-10 sm:pt-14">
+      <div data-reveal="fade" class="mb-12">
+        <Breadcrumb items={crumbs} locale={locale} label={t('nav.breadcrumb')} />
+      </div>
+
+      <div class="grid gap-12 lg:grid-cols-12 lg:gap-x-16">
+        <div class="lg:col-span-7">
+          <div
+            data-reveal="fade"
+            class="flex flex-wrap items-baseline gap-x-5 gap-y-2 font-mono text-micro uppercase tracking-[0.18em]"
+          >
+            <span class="text-accent">{view.groupLabel ?? view.type}</span>
+            <span class="text-mist">{view.region}</span>
+          </div>
+
+          <h1 data-stagger class="mt-7 font-display text-display leading-[0.92] text-ink">
+            <span class="block">{view.shortName}</span>
+          </h1>
+
+          <p
+            data-reveal="up"
+            style="--reveal-delay:200ms"
+            class="mt-6 max-w-2xl font-display text-h3 text-graphite"
+          >
+            {view.fullName}
+          </p>
+
+          <p
+            data-reveal="up"
+            style="--reveal-delay:280ms"
+            class="mt-8 max-w-2xl text-lead text-charcoal"
+          >
+            {view.lede}
+          </p>
+
+          {
+            view.tags.length > 0 && (
+              <ul
+                data-reveal="fade"
+                style="--reveal-delay:360ms"
+                class="mt-10 flex flex-wrap gap-x-5 gap-y-2.5"
+              >
+                {view.tags.map((tag) => (
+                  <li class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                    {tag}
+                  </li>
+                ))}
+              </ul>
+            )
+          }
+        </div>
+
+        <!-- Metadata + trust column -->
+        <div class="lg:col-span-5 lg:pt-3">
+          <dl data-reveal="up" class="flex flex-col border-t border-rule">
+            {
+              [
+                { label: t('systems.type'), value: view.type },
+                { label: t('common.region'), value: view.region },
+                { label: t('common.academicYear'), value: view.academicYear },
+                { label: t('common.updated'), value: formatDate(view.updatedAt, locale) },
+              ].map((row) => (
+                <div class="grid grid-cols-[minmax(0,9rem)_1fr] gap-6 border-b border-rule py-4">
+                  <dt class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                    {row.label}
+                  </dt>
+                  <dd class="meta-mono text-charcoal">{row.value}</dd>
+                </div>
+              ))
+            }
+          </dl>
+
+          {
+            isFallback && (
+              <p class="mt-6 border-l border-accent pl-4 text-caption leading-relaxed text-graphite">
+                {locale === 'zh'
+                  ? '该条目暂无中文版本，当前显示默认语言内容。'
+                  : 'This entry has not been translated into English yet, so the default-language text is shown.'}
+              </p>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Page structure (01 → 09) ──────────────────────────────────── -->
+  <nav class="edge-rule" aria-label={t('section.toc')}>
+    <div class="u-container py-10">
+      <p data-reveal="fade" class="eyebrow">{t('section.toc')}</p>
+      <ol class="mt-8 grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+        {
+          view.sections.map((section) => (
+            <li>
+              <a
+                href={`#${section.id}`}
+                class="group flex items-baseline gap-3 py-1 transition-colors duration-300"
+              >
+                <span class="font-mono text-micro text-accent tabnum">{section.number}</span>
+                <span class="text-caption text-charcoal transition-colors duration-300 group-hover:text-accent">
+                  {section.label}
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </nav>
+
+  <!-- ── Sections ──────────────────────────────────────────────────── -->
+  {
+    view.sections.map((section) => (
+      <ProfileSection section={section} view={view} locale={locale} total={totalSections} />
+    ))
+  }
+
+  <!-- ── Editorial trust notice ────────────────────────────────────── -->
+  <section class="edge-rule" aria-label={t('common.editorialNoteTitle')}>
+    <div class="u-container py-16">
+      <h2 class="eyebrow">{t('common.editorialNoteTitle')}</h2>
+      <p class="mt-6 max-w-3xl text-caption leading-relaxed text-graphite">
+        {site.editorialNote[locale]}
+      </p>
+    </div>
+  </section>
+</BaseLayout>

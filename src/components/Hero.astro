@@ -1,0 +1,106 @@
+---
+/**
+ * Hero — the home page's first screen (brief, section 5).
+ *
+ * Composition: an asymmetric editorial split. The headline occupies the left
+ * measure at display scale; the original education-network diagram occupies
+ * the right. A scroll affordance closes the screen.
+ *
+ * Every line enters in sequence via the global stagger primitive.
+ */
+import HeroNetwork from './HeroNetwork.astro';
+import ImageReveal from './ImageReveal.astro';
+import { site } from '@/site.config';
+import { localizePath, useTranslations, type Locale } from '@/i18n/utils';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const lines = [t('home.hero.line1'), t('home.hero.line2'), t('home.hero.line3')];
+---
+
+<section class="relative overflow-hidden" aria-labelledby="hero-title">
+  <!-- Coordinate backdrop, faded out towards the edges -->
+  <div
+    aria-hidden="true"
+    class="bg-coordinate pointer-events-none absolute inset-0 [mask-image:radial-gradient(120%_80%_at_50%_0%,black,transparent_78%)]"
+  >
+  </div>
+
+  <div class="u-container relative">
+    <div class="grid items-end gap-14 pb-24 pt-14 sm:pt-20 lg:grid-cols-12 lg:gap-x-12 lg:pb-32 lg:pt-24">
+      <!-- ── Left: headline ─────────────────────────────────────────── -->
+      <div class="lg:col-span-6 xl:col-span-5">
+        <p data-reveal="fade" class="eyebrow eyebrow-accent">
+          {t('home.hero.eyebrow')}
+        </p>
+
+        <h1 id="hero-title" data-stagger class="mt-8 font-display text-display text-ink">
+          {
+            lines.map((line) => (
+              <span class="block">{line}</span>
+            ))
+          }
+        </h1>
+
+        <p
+          data-reveal="up"
+          style="--reveal-delay:420ms"
+          class="mt-8 max-w-md text-lead text-charcoal"
+        >
+          {t('home.hero.lede')}
+        </p>
+
+        <div data-reveal="up" style="--reveal-delay:520ms" class="mt-10">
+          <a
+            href={localizePath('/systems', locale)}
+            class="group inline-flex items-center gap-4 font-mono text-meta uppercase tracking-[0.18em] text-ink"
+          >
+            <span aria-hidden="true" class="text-accent">[</span>
+            <span class="link-underline">{t('home.hero.cta')}</span>
+            <span aria-hidden="true" class="text-accent">]</span>
+            <span
+              aria-hidden="true"
+              class="transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1.5"
+            >
+              →
+            </span>
+          </a>
+        </div>
+
+        <!-- Scroll affordance -->
+        <div
+          data-reveal="fade"
+          style="--reveal-delay:680ms"
+          class="mt-16 hidden items-center gap-4 lg:flex"
+        >
+          <span class="font-mono text-micro uppercase tracking-[0.2em] text-mist">
+            {t('home.hero.scroll')}
+          </span>
+          <span aria-hidden="true" class="relative h-10 w-px overflow-hidden bg-rule">
+            <span class="absolute inset-x-0 top-0 h-4 animate-drift bg-accent"></span>
+          </span>
+        </div>
+      </div>
+
+      <!-- ── Right: the diagram ─────────────────────────────────────── -->
+      <div class="lg:col-span-6 lg:col-start-7 xl:col-span-7">
+        <ImageReveal
+          number="01"
+          caption={t('home.hero.figureCaption')}
+          note={t('common.conceptDisclaimer')}
+        >
+          <HeroNetwork locale={locale} />
+        </ImageReveal>
+
+        <p class="mt-6 max-w-md border-t border-rule pt-5 text-caption leading-relaxed text-graphite">
+          {site.description[locale]}
+        </p>
+      </div>
+    </div>
+  </div>
+</section>

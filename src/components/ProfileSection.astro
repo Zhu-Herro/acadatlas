@@ -1,0 +1,234 @@
+---
+/**
+ * ProfileSection — renders ONE numbered section of a system or exam profile.
+ *
+ * Layout: a sticky left rail carrying the number, the section label and the
+ * section question; the right column carries the content blocks. This is the
+ * pattern that gives every detail page the same reading rhythm and makes the
+ * 09-section template reusable across content types.
+ */
+import type { ProfileBlock, ProfileSection, ProfileView } from '@/lib/profile';
+import FAQ from './FAQ.astro';
+import SourceList from './SourceList.astro';
+import SystemCompare from './SystemCompare.astro';
+import RelatedContent from './RelatedContent.astro';
+import type { Locale } from '@/i18n/utils';
+
+interface Props {
+  section: ProfileSection;
+  view: ProfileView;
+  locale: Locale;
+  /** Total number of sections — used for the progress indicator. */
+  total: number;
+}
+
+const { section, view, locale, total } = Astro.props;
+const titleId = `${section.id}-title`;
+
+/** Narrow a union member inside the template without losing type safety. */
+const is = <K extends ProfileBlock['type']>(block: ProfileBlock, type: K) =>
+  block.type === type ? (block as Extract<ProfileBlock, { type: K }>) : null;
+---
+
+<section
+  id={section.id}
+  class="u-section edge-rule scroll-mt-28"
+  aria-labelledby={titleId}
+>
+  <div class="u-container">
+    <div class="grid gap-12 lg:grid-cols-12 lg:gap-x-16">
+      <!-- ── Left rail: number / label / question ─────────────────────── -->
+      <div class="lg:col-span-4">
+        <div data-reveal="up" class="lg:sticky lg:top-32">
+          <div class="flex items-baseline gap-2.5 font-mono text-micro uppercase tabnum">
+            <span class="text-accent">{section.number}</span>
+            <span aria-hidden="true" class="text-rule">/</span>
+            <span class="text-graphite">{section.label}</span>
+          </div>
+
+          <h2 id={titleId} class="mt-5 font-display text-h3 leading-tight text-ink">
+            {section.question}
+          </h2>
+
+          <p class="mt-6 font-mono text-micro text-mist tabnum">
+            {String(Number(section.number))} / {String(total).padStart(2, '0')}
+          </p>
+        </div>
+      </div>
+
+      <!-- ── Right column: blocks ─────────────────────────────────────── -->
+      <div class="lg:col-span-8">
+        <div class="flex flex-col gap-12">
+          {
+            section.blocks.map((block) => {
+              const prose = is(block, 'prose');
+              if (prose) {
+                return (
+                  <div class="flex max-w-2xl flex-col gap-5">
+                    {prose.items.map((paragraph, index) => (
+                      <p
+                        data-reveal="up"
+                        style={`--reveal-delay:${index * 60}ms`}
+                        class="text-body-lg leading-relaxed text-charcoal"
+                      >
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                );
+              }
+
+              const pairs = is(block, 'pairs');
+              if (pairs) {
+                return (
+                  <dl class="flex flex-col border-t border-rule">
+                    {pairs.items.map((pair, index) => (
+                      <div
+                        data-reveal="up"
+                        style={`--reveal-delay:${index * 50}ms`}
+                        class="grid gap-2 border-b border-rule py-5 sm:grid-cols-[minmax(0,13rem)_1fr] sm:gap-8"
+                      >
+                        <dt class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                          {pair.label}
+                        </dt>
+                        <dd class="text-body text-charcoal">{pair.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                );
+              }
+
+              const groups = is(block, 'groups');
+              if (groups) {
+                return (
+                  <div class="grid gap-x-10 gap-y-9 sm:grid-cols-2">
+                    {groups.items.map((group, index) => (
+                      <div
+                        data-reveal="up"
+                        style={`--reveal-delay:${index * 60}ms`}
+                        class="border-t border-rule pt-5"
+                      >
+                        <h3 class="font-mono text-micro uppercase tracking-[0.14em] text-accent">
+                          {group.group}
+                        </h3>
+                        <ul class="mt-5 flex flex-col gap-3">
+                          {group.items.map((item) => (
+                            <li class="flex gap-3.5 text-caption leading-relaxed text-charcoal">
+                              <span
+                                aria-hidden="true"
+                                class="mt-[0.72em] h-px w-3.5 shrink-0 bg-accent"
+                              />
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                );
+              }
+
+              const points = is(block, 'points');
+              if (points) {
+                return (
+                  <ul class="flex flex-col border-t border-rule">
+                    {points.items.map((item, index) => (
+                      <li
+                        data-reveal="up"
+                        style={`--reveal-delay:${index * 50}ms`}
+                        class="flex gap-5 border-b border-rule py-5"
+                      >
+                        <span class="font-mono text-micro text-accent tabnum">
+                          {String(index + 1).padStart(2, '0')}
+                        </span>
+                        <p class="flex-1 text-body leading-relaxed text-charcoal">{item}</p>
+                      </li>
+                    ))}
+                  </ul>
+                );
+              }
+
+              const destinations = is(block, 'destinations');
+              if (destinations) {
+                return (
+                  <ul class="flex flex-col border-t border-rule">
+                    {destinations.items.map((destination, index) => (
+                      <li
+                        data-reveal="up"
+                        style={`--reveal-delay:${index * 50}ms`}
+                        class="border-b border-rule"
+                      >
+                        <a
+                          href={destination.href}
+                          class="group flex flex-col gap-2 py-6"
+                        >
+                          <span class="flex items-baseline justify-between gap-6">
+                            <span class="font-display text-h3 text-ink transition-colors duration-300 group-hover:text-accent">
+                              {destination.name}
+                            </span>
+                            <span
+                              aria-hidden="true"
+                              class="font-mono text-caption text-mist transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1 group-hover:text-accent"
+                            >
+                              →
+                            </span>
+                          </span>
+                          {destination.note && (
+                            <span class="max-w-2xl text-caption leading-relaxed text-graphite">
+                              {destination.note}
+                            </span>
+                          )}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                );
+              }
+
+              const compare = is(block, 'compare');
+              if (compare) {
+                return (
+                  <SystemCompare
+                    current={{ slug: view.slug, shortName: view.shortName }}
+                    targets={compare.items}
+                    locale={locale}
+                  />
+                );
+              }
+
+              const links = is(block, 'links');
+              if (links) {
+                return (
+                  <RelatedContent
+                    items={links.items.map((link) => ({ name: link.name, href: link.href }))}
+                    locale={locale}
+                  />
+                );
+              }
+
+              const faq = is(block, 'faq');
+              if (faq) {
+                return <FAQ items={faq.items} />;
+              }
+
+              const sources = is(block, 'sources');
+              if (sources) {
+                return (
+                  <SourceList
+                    sources={sources.items}
+                    locale={locale}
+                    updatedAt={view.updatedAt}
+                    academicYear={view.academicYear}
+                    region={view.region}
+                  />
+                );
+              }
+
+              return null;
+            })
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

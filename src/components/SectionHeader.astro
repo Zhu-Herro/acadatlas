@@ -1,0 +1,85 @@
+---
+/**
+ * Editorial section header.
+ *
+ * Layout follows the site's repeating rhythm:
+ *   [ 01 / EDUCATION SYSTEMS ]      ← uppercase micro-label
+ *   One world.                      ← display line 1
+ *   Many pathways.                  ← display line 2
+ *   Supporting paragraph.           ← lede
+ *
+ * The heading element is configurable so each section keeps a correct
+ * document outline (h2 on a page, h3 inside an article).
+ */
+interface Props {
+  number?: string;
+  label: string;
+  /** One or more display lines. Multiple lines render on separate rows. */
+  title: string | string[];
+  lede?: string;
+  id?: string;
+  /** Heading level — affects semantics only. */
+  as?: 'h1' | 'h2' | 'h3';
+  size?: 'h2' | 'h1' | 'h3';
+  /** Widen the lede measure. */
+  wide?: boolean;
+  class?: string;
+}
+
+const {
+  number,
+  label,
+  title,
+  lede,
+  id,
+  as: Heading = 'h2',
+  size = 'h2',
+  wide = false,
+  class: className = '',
+} = Astro.props;
+
+const lines = Array.isArray(title) ? title : [title];
+
+const sizeClass = {
+  h1: 'text-h1',
+  h2: 'text-h2',
+  h3: 'text-h3',
+}[size];
+---
+
+<header class:list={['max-w-4xl', className]}>
+  <div data-reveal="fade" class="flex items-baseline gap-2.5 font-mono text-micro uppercase tabnum">
+    {number && <span class="text-accent">{number}</span>}
+    {number && <span aria-hidden="true" class="text-rule">/</span>}
+    <span class="text-graphite">{label}</span>
+  </div>
+
+  <Heading id={id} class:list={['mt-6 font-display text-ink', sizeClass]}>
+    {
+      lines.map((line, index) => (
+        <span
+          data-reveal="up"
+          style={`--reveal-delay:${80 + index * 90}ms`}
+          class="block"
+        >
+          {line}
+        </span>
+      ))
+    }
+  </Heading>
+
+  {
+    lede && (
+      <p
+        data-reveal="up"
+        style={`--reveal-delay:${120 + lines.length * 90}ms`}
+        class:list={[
+          'mt-7 text-lead text-charcoal',
+          wide ? 'max-w-3xl' : 'max-w-xl',
+        ]}
+      >
+        {lede}
+      </p>
+    )
+  }
+</header>

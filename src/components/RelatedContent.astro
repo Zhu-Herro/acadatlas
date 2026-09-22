@@ -1,0 +1,56 @@
+---
+/**
+ * RelatedContent — cross-links between entries.
+ * Rendered as an editorial list, never as a card wall.
+ */
+import { useTranslations, type Locale } from '@/i18n/utils';
+
+interface Item {
+  name: string;
+  href: string;
+  /** Optional extra context, e.g. the entry type. */
+  meta?: string;
+}
+
+interface Props {
+  items: Item[];
+  locale: Locale;
+  label?: string;
+}
+
+const { items, locale, label } = Astro.props;
+const t = useTranslations(locale);
+const heading = label ?? t('common.related');
+---
+
+{
+  items.length > 0 && (
+    <div>
+      <h3 class="eyebrow">{heading}</h3>
+      <ul class="mt-6 flex flex-col border-t border-rule">
+        {items.map((item, index) => (
+          <li class="border-b border-rule">
+            <a
+              href={item.href}
+              class="group flex items-baseline gap-5 py-5 transition-colors duration-300"
+            >
+              <span class="font-mono text-micro text-mist tabnum">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <span class="flex-1 text-h4 text-ink transition-colors duration-300 group-hover:text-accent">
+                {item.name}
+              </span>
+              {item.meta && <span class="meta-mono text-mist">{item.meta}</span>}
+              <span
+                aria-hidden="true"
+                class="font-mono text-caption text-mist transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1 group-hover:text-accent"
+              >
+                →
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}

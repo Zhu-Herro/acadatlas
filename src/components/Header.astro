@@ -1,0 +1,239 @@
+---
+/**
+ * Site header.
+ *
+ * Behaviour (brief section 16):
+ *  - minimal, precise, never "Bootstrap-like"
+ *  - transparent at the top of a page, becoming compact + hairline-ruled once
+ *    the reader scrolls
+ *  - full-screen drawer on mobile
+ *  - search trigger exposed as ⌘K / Ctrl-K
+ */
+import Logo from './Logo.astro';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+import { primaryNav, secondaryNav } from '@/data/navigation';
+import { localizePath, stripLocale, useTranslations, type Locale } from '@/i18n/utils';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const currentPath = stripLocale(Astro.url.pathname);
+const isActive = (href: string) =>
+  href === '/' ? currentPath === '/' : currentPath === href || currentPath.startsWith(`${href}/`);
+
+/** Combined list for the mobile drawer, numbered as one sequence. */
+const drawerNav = [...primaryNav, ...secondaryNav];
+---
+
+<header
+  id="site-header"
+  data-site-header
+  class="fixed inset-x-0 top-0 z-50 transition-[background-color,backdrop-filter,border-color] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] border-b border-transparent"
+>
+  <div class="u-container">
+    <div
+      data-header-inner
+      class="flex items-center justify-between gap-8 transition-[padding] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] py-6"
+    >
+      <Logo locale={locale} />
+
+      <!-- Desktop navigation -->
+      <nav
+        class="hidden lg:flex items-center gap-x-8 xl:gap-x-10"
+        aria-label={t('nav.primary')}
+      >
+        {
+          primaryNav.map((item) => (
+            <a
+              href={localizePath(item.href, locale)}
+              aria-current={isActive(item.href) ? 'page' : undefined}
+              class:list={[
+                'group relative font-mono text-[0.6875rem] uppercase tracking-[0.16em] leading-none py-2 transition-colors duration-300',
+                isActive(item.href) ? 'text-ink' : 'text-graphite hover:text-ink',
+              ]}
+            >
+              {t(item.key)}
+              <span
+                aria-hidden="true"
+                class:list={[
+                  'absolute -bottom-0.5 left-0 h-px w-full origin-left bg-accent transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]',
+                  isActive(item.href) ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100',
+                ]}
+              />
+            </a>
+          ))
+        }
+      </nav>
+
+      <div class="flex items-center gap-4 sm:gap-5">
+        <button
+          type="button"
+          data-search-open
+          class="group flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-[0.16em] leading-none text-graphite transition-colors duration-300 hover:text-accent"
+          aria-label={t('search.open')}
+        >
+          <svg class="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="6.8" cy="6.8" r="4.9" stroke="currentColor" stroke-width="1.3" />
+            <path d="M10.6 10.6 14.4 14.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+          </svg>
+          <span class="hidden md:inline">{t('nav.search')}</span>
+          <kbd
+            class="hidden xl:inline border border-rule px-1.5 py-0.5 text-[0.625rem] leading-none text-mist"
+            aria-hidden="true">⌘K</kbd
+          >
+        </button>
+
+        <span class="hidden sm:block h-3.5 w-px bg-rule" aria-hidden="true"></span>
+
+        <LanguageSwitcher locale={locale} />
+
+        <button
+          type="button"
+          data-menu-toggle
+          class="lg:hidden -mr-1 p-1 text-ink"
+          aria-label={t('nav.openMenu')}
+          aria-expanded="false"
+          aria-controls="mobile-drawer"
+        >
+          <span class="sr-only">{t('nav.menu')}</span>
+          <span class="flex h-4 w-5 flex-col justify-between" aria-hidden="true">
+            <span data-menu-line class="block h-px w-full origin-left bg-current transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"></span>
+            <span data-menu-line class="block h-px w-full origin-left bg-current transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"></span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Mobile drawer -->
+<div
+  id="mobile-drawer"
+  data-mobile-drawer
+  hidden
+  class="fixed inset-0 z-40 lg:hidden bg-paper"
+>
+  <div class="u-container flex h-full flex-col pt-28 pb-10">
+    <nav class="flex-1" aria-label={t('nav.primary')}>
+      <ul data-stagger class="flex flex-col">
+        {
+          drawerNav.map((item, index) => (
+            <li class="border-b border-rule">
+              <a
+                href={localizePath(item.href, locale)}
+                class="flex items-baseline justify-between py-5 font-display text-h3 text-ink transition-colors duration-300 hover:text-accent"
+              >
+                <span>{t(item.key)}</span>
+                <span aria-hidden="true" class="font-mono text-meta text-mist">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="mt-10 flex items-center justify-between border-t border-rule pt-6">
+      <LanguageSwitcher locale={locale} />
+      <button
+        type="button"
+        data-search-open
+        class="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-graphite hover:text-accent"
+      >
+        {t('nav.search')}
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Compact state, applied by the header script once the reader scrolls. */
+  :global(#site-header.is-compact) {
+    background-color: color-mix(in oklab, var(--color-paper) 88%, transparent);
+    backdrop-filter: blur(14px) saturate(140%);
+    border-bottom-color: var(--color-rule);
+  }
+
+  :global(#site-header.is-compact [data-header-inner]) {
+    padding-block: 1rem;
+  }
+
+  /* Mobile drawer open state (animated by CSS, not JS transforms). */
+  :global(#site-header.is-open) {
+    background-color: var(--color-paper);
+    border-bottom-color: transparent;
+  }
+
+  :global(#site-header.is-open [data-menu-line]:first-child) {
+    transform: translateY(0.5rem) rotate(38deg);
+  }
+
+  :global(#site-header.is-open [data-menu-line]:last-child) {
+    transform: translateY(-0.44rem) rotate(-38deg);
+  }
+
+  :global(body.is-locked) {
+    overflow: hidden;
+  }
+</style>
+
+<script>
+  /** Header behaviour: scroll compaction, mobile drawer, search shortcut. */
+  const header = document.getElementById('site-header');
+  const drawer = document.querySelector<HTMLElement>('[data-mobile-drawer]');
+  const menuToggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+
+  /* --- 1. Scroll compaction ------------------------------------------------- */
+  if (header) {
+    let ticking = false;
+    const update = () => {
+      header.classList.toggle('is-compact', window.scrollY > 24);
+      ticking = false;
+    };
+    update();
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!ticking) {
+          ticking = true;
+          window.requestAnimationFrame(update);
+        }
+      },
+      { passive: true },
+    );
+  }
+
+  /* --- 2. Mobile drawer ----------------------------------------------------- */
+  const setDrawer = (open: boolean) => {
+    if (!drawer || !header || !menuToggle) return;
+    drawer.hidden = !open;
+    header.classList.toggle('is-open', open);
+    document.body.classList.toggle('is-locked', open);
+    menuToggle.setAttribute('aria-expanded', String(open));
+    menuToggle.setAttribute('aria-label', open ? menuToggle.dataset.closeLabel ?? 'Close' : menuToggle.dataset.openLabel ?? 'Menu');
+  };
+
+  menuToggle?.addEventListener('click', () => {
+    setDrawer(drawer?.hidden ?? false);
+  });
+
+  // Close the drawer whenever a link inside it is followed.
+  drawer?.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', () => setDrawer(false));
+  });
+
+  /* --- 3. Escape closes the drawer; the search dialog owns its own handler --- */
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && drawer && !drawer.hidden) setDrawer(false);
+  });
+
+  // Reset state when resizing up to desktop.
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 1024) setDrawer(false);
+  });
+</script>

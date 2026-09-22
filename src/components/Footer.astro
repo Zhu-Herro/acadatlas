@@ -1,0 +1,97 @@
+---
+/**
+ * Site footer.
+ *
+ * Carries the brand line, navigation columns, the editorial disclaimer
+ * (brief section 24 — trust by design) and the copyright.
+ */
+import Logo from './Logo.astro';
+import { site } from '@/site.config';
+import { footerAbout, footerBrowse } from '@/data/navigation';
+import { localizePath, useTranslations, type Locale } from '@/i18n/utils';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const year = new Date().getFullYear();
+---
+
+<footer class="edge-rule mt-0 bg-paper">
+  <div class="u-container py-16 sm:py-20">
+    <div class="grid gap-14 lg:grid-cols-[1.4fr_1fr_1fr] lg:gap-10">
+      <!-- Brand column -->
+      <div data-reveal="up" class="max-w-sm">
+        <Logo locale={locale} size="lg" />
+        <p class="mt-6 font-display text-h3 leading-snug text-ink">
+          {site.tagline[locale]}
+        </p>
+        <p class="mt-5 text-caption text-graphite">
+          {site.legalName[locale]}
+        </p>
+        <a
+          href={`mailto:${site.contact.email}`}
+          class="link-underline mt-6 inline-block font-mono text-meta tracking-[0.06em]"
+        >
+          {site.contact.email}
+        </a>
+      </div>
+
+      <!-- Navigation columns -->
+      <nav aria-label={t('footer.explore')} data-reveal="up" style="--reveal-delay:80ms">
+        <h2 class="eyebrow">{t('footer.explore')}</h2>
+        <ul class="mt-6 flex flex-col gap-3.5">
+          {
+            footerBrowse.map((item) => (
+              <li>
+                <a
+                  href={localizePath(item.href, locale)}
+                  class="text-caption text-charcoal transition-colors duration-300 hover:text-accent"
+                >
+                  {t(item.key)}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      <nav aria-label={t('footer.about')} data-reveal="up" style="--reveal-delay:160ms">
+        <h2 class="eyebrow">{t('footer.about')}</h2>
+        <ul class="mt-6 flex flex-col gap-3.5">
+          {
+            footerAbout.map((item) => (
+              <li>
+                <a
+                  href={localizePath(item.href, locale)}
+                  class="text-caption text-charcoal transition-colors duration-300 hover:text-accent"
+                >
+                  {t(item.key)}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+    </div>
+
+    <!-- Trust notice -->
+    <div class="mt-16 border-t border-rule pt-8">
+      <p class="max-w-3xl text-caption leading-relaxed text-graphite">
+        <span class="eyebrow mr-3 align-middle">{t('footer.legal')}</span>
+        {site.editorialNote[locale]}
+      </p>
+
+      <div
+        class="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <p class="meta-mono">
+          © {site.since}–{year} {site.name}. {t('footer.rights')}
+        </p>
+        <p class="meta-mono text-mist">{t('footer.builtWith')}</p>
+      </div>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,15 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection } from 'astro:content';
+import { collectSlugs } from '@/lib/content';
+import ProfilePage from '@/views/ProfilePage.astro';
+
+export const getStaticPaths = (async () => {
+  const entries = await getCollection('systems');
+  return collectSlugs(entries).map((slug) => ({ params: { slug } }));
+}) satisfies GetStaticPaths;
+
+const { slug } = Astro.params as { slug: string };
+---
+
+<ProfilePage kind="system" slug={slug} locale="en" />

@@ -1,0 +1,34 @@
+# build output
+dist/
+.output/
+
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# author's private requirements brief — kept locally, never published
+order.md
+
+# environment variables
+.env
+.env.production
+.env.local
+
+# netlify
+.netlify/
+
+# editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

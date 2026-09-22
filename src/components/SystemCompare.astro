@@ -1,0 +1,69 @@
+---
+/**
+ * SystemCompare — "DSE vs IB", "DSE vs A-Level", "DSE vs AP".
+ *
+ * Used by the comparison section of every system detail page (brief, section
+ * 11 item 07). Each pairing is a row that deep-links into the comparison tool
+ * with both systems pre-selected, so the reader never has to re-select them.
+ */
+import { localizePath, useTranslations, type Locale } from '@/i18n/utils';
+
+interface Props {
+  /** The system the reader is currently on. */
+  current: { slug: string; shortName: string };
+  targets: { slug: string; name: string; href: string }[];
+  locale: Locale;
+  class?: string;
+}
+
+const { current, targets, locale, class: className = '' } = Astro.props;
+const t = useTranslations(locale);
+const compareBase = localizePath('/compare', locale);
+---
+
+<div class:list={[className]}>
+  <ul class="flex flex-col border-t border-rule">
+    {
+      targets.map((target, index) => (
+        <li class="border-b border-rule">
+          <a
+            href={`${compareBase}?systems=${current.slug},${target.slug}`}
+            class="group flex flex-wrap items-baseline gap-x-6 gap-y-3 py-6"
+          >
+            <span class="font-mono text-micro text-mist tabnum">
+              {String(index + 1).padStart(2, '0')}
+            </span>
+
+            <span class="flex items-baseline gap-3 font-display text-h3 text-ink transition-colors duration-300 group-hover:text-accent">
+              <span>{current.shortName}</span>
+              <span aria-hidden="true" class="font-mono text-caption text-accent">×</span>
+              <span>{target.name}</span>
+            </span>
+
+            <span class="ml-auto flex items-center gap-3 font-mono text-micro uppercase tracking-[0.16em] text-graphite transition-colors duration-300 group-hover:text-accent">
+              {t('compare.title')}
+              <span
+                aria-hidden="true"
+                class="transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1"
+              >
+                →
+              </span>
+            </span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+
+  <p class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2">
+    <a
+      href={localizePath(`/systems/${current.slug}`, locale)}
+      class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
+    >
+      {t('compare.viewSystem')}
+    </a>
+    <span class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+      {t('compare.referenceOnly')}
+    </span>
+  </p>
+</div>

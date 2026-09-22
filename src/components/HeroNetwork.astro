@@ -1,0 +1,282 @@
+---
+/**
+ * HeroNetwork — the hero's principal visual.
+ *
+ * An original, code-drawn diagram: named education systems arranged as nodes
+ * around a shared centre ("GLOBAL EDUCATION"), linked into a network and
+ * annotated with the coordinates / years / regions that the brand uses as its
+ * graphic vocabulary.
+ *
+ * Deliberately NOT a stock photograph (brief, section 6). No external assets,
+ * no raster imagery — pure SVG plus CSS motion, so it is resolution
+ * independent, ~8 KB, and animates without JavaScript.
+ *
+ * Editorial note: the diagram is labelled as a concept. It makes no claim
+ * about admissions policy.
+ */
+
+import type { Locale } from '@/i18n/utils';
+
+interface Props {
+  locale: Locale;
+  class?: string;
+}
+
+const { locale, class: className = '' } = Astro.props;
+
+/**
+ * Node geometry. Coordinates and ray lengths are pre-computed constants so the
+ * `--draw-length` used by the line-drawing animation matches each segment
+ * exactly (no magic numbers scattered through the markup).
+ */
+const nodes = [
+  { id: 'ib', label: 'IB', sub: 'GENEVA · 1968', x: 600, y: 128, len: 272, anchor: 'middle', tx: 600, ty: 100, tsub: 118, drift: 0 },
+  { id: 'ap', label: 'AP', sub: 'US · COLLEGE BOARD', x: 928, y: 216, len: 376, anchor: 'start', tx: 952, ty: 210, tsub: 228, drift: -3 },
+  { id: 'a-level', label: 'A-LEVEL', sub: 'UK · GCE', x: 1012, y: 430, len: 413, anchor: 'start', tx: 1036, ty: 436, tsub: 454, drift: -6 },
+  { id: 'dse', label: 'DSE', sub: 'HK · HKDSE', x: 888, y: 620, len: 362, anchor: 'start', tx: 912, ty: 628, tsub: 646, drift: -9 },
+  { id: 'igcse', label: 'IGCSE', sub: 'UK · 14–16', x: 312, y: 620, len: 362, anchor: 'end', tx: 288, ty: 628, tsub: 646, drift: -12 },
+  { id: 'sat', label: 'SAT', sub: 'US · ADMISSIONS', x: 188, y: 430, len: 413, anchor: 'end', tx: 164, ty: 436, tsub: 454, drift: -15 },
+  { id: 'act', label: 'ACT', sub: 'US · ADMISSIONS', x: 272, y: 216, len: 376, anchor: 'end', tx: 248, ty: 210, tsub: 228, drift: -18 },
+] as const;
+
+/** Perimeter links between neighbouring nodes — the "network" layer. */
+const mesh = [
+  { from: [600, 128], to: [928, 216], len: 340 },
+  { from: [928, 216], to: [1012, 430], len: 230 },
+  { from: [1012, 430], to: [888, 620], len: 227 },
+  { from: [888, 620], to: [312, 620], len: 576 },
+  { from: [312, 620], to: [188, 430], len: 227 },
+  { from: [188, 430], to: [272, 216], len: 230 },
+  { from: [272, 216], to: [600, 128], len: 340 },
+] as const;
+
+/** Faint peripheral annotations — the "坐标系统 / 学科 / 年份" vocabulary. */
+const annotations = [
+  { text: '01 — 07', x: 96, y: 92 },
+  { text: '2026', x: 1104, y: 92, anchor: 'end' as const },
+  { text: 'MATHEMATICS', x: 96, y: 700 },
+  { text: 'SCIENCES / LANGUAGES / HUMANITIES', x: 1104, y: 700, anchor: 'end' as const },
+  { text: 'HK · CN · UK · US · CA · AU · SG', x: 600, y: 92, anchor: 'middle' as const },
+];
+---
+
+<div class:list={[className]}>
+  <div data-reveal="fade" class="w-full">
+    <svg
+      class="hero-network w-full"
+      viewBox="0 0 1200 760"
+      role="img"
+      aria-labelledby="hero-network-title"
+      preserveAspectRatio="xMidYMid meet"
+    >
+      <title id="hero-network-title">
+        {
+          locale === 'zh'
+            ? '国际教育体系关系网络概念图：DSE、AP、IB、A-Level、IGCSE、SAT、ACT 围绕全球教育构成的网络。'
+            : 'Concept diagram of a global education systems network: DSE, AP, IB, A-Level, IGCSE, SAT and ACT arranged around global education.'
+        }
+      </title>
+
+      <!-- ── Coordinate system ─────────────────────────────────────────── -->
+      <g class="hero-coordinates" stroke="var(--color-rule)" stroke-width="1" fill="none">
+        <path d="M0 190h1200M0 380h1200M0 570h1200" />
+        <path d="M150 0v760M300 0v760M450 0v760M600 0v760M750 0v760M900 0v760M1050 0v760" />
+      </g>
+
+      <!-- Playhead axis -->
+      <g stroke="var(--color-mist)" stroke-width="1">
+        <path d="M60 760V40" />
+        <path d="M54 40h12M54 190h8M54 380h8M54 570h8" />
+      </g>
+
+      <!-- ── Orbit rings ──────────────────────────────────────────────── -->
+      <g fill="none">
+        <circle cx="600" cy="400" r="150" stroke="var(--color-rule)" stroke-width="1" />
+        <ellipse
+          cx="600"
+          cy="400"
+          rx="470"
+          ry="330"
+          stroke="var(--color-rule)"
+          stroke-width="1"
+          stroke-dasharray="3 7"
+        />
+        <rect
+          x="120"
+          y="60"
+          width="960"
+          height="640"
+          stroke="var(--color-rule)"
+          stroke-width="1"
+          stroke-dasharray="6 6"
+          fill="none"
+        />
+      </g>
+
+      <!-- Corner ticks -->
+      <g stroke="var(--color-ink)" stroke-width="1.4">
+        <path d="M120 84V60h24" />
+        <path d="M1056 60h24v24" />
+        <path d="M120 676v24h24" />
+        <path d="M1056 700h24v-24" />
+      </g>
+
+      <!-- ── Mesh (perimeter links) ───────────────────────────────────── -->
+      <g stroke="var(--color-mist)" stroke-width="1" fill="none" opacity="0.55">
+        {
+          mesh.map((segment) => (
+            <line
+              class="draw-line"
+              x1={segment.from[0]}
+              y1={segment.from[1]}
+              x2={segment.to[0]}
+              y2={segment.to[1]}
+              stroke-dasharray={String(segment.len)}
+              style={`--draw-length:${segment.len};--reveal-delay:220ms`}
+            />
+          ))
+        }
+      </g>
+
+      <!-- ── Spokes (centre → node) ───────────────────────────────────── -->
+      <g stroke="var(--color-charcoal)" stroke-width="1.1" fill="none" opacity="0.8">
+        {
+          nodes.map((node, index) => (
+            <line
+              class="draw-line"
+              x1="600"
+              y1="400"
+              x2={node.x}
+              y2={node.y}
+              stroke-dasharray={String(node.len)}
+              style={`--draw-length:${node.len};--reveal-delay:${380 + index * 90}ms`}
+            />
+          ))
+        }
+      </g>
+
+      <!-- ── Centre ───────────────────────────────────────────────────── -->
+      <g class="animate-pulse-soft" fill="none" stroke="var(--color-accent)" stroke-width="1.2">
+        <circle cx="600" cy="400" r="54" />
+      </g>
+      <circle cx="600" cy="400" r="5" fill="var(--color-accent)" />
+      <text
+        x="600"
+        y="392"
+        text-anchor="middle"
+        class="hero-label hero-label--centre"
+        fill="var(--color-ink)">GLOBAL</text
+      >
+      <text
+        x="600"
+        y="416"
+        text-anchor="middle"
+        class="hero-label hero-label--centre"
+        fill="var(--color-ink)">EDUCATION</text
+      >
+
+      <!-- ── Nodes ────────────────────────────────────────────────────── -->
+      {
+        nodes.map((node) => (
+          <g
+            class="animate-drift"
+            style={`animation-delay:${node.drift}s`}
+          >
+            <circle cx={node.x} cy={node.y} r="11" fill="var(--color-paper)" stroke="var(--color-ink)" stroke-width="1.3" />
+            <circle cx={node.x} cy={node.y} r="3.4" fill="var(--color-accent)" />
+            <text
+              x={node.tx}
+              y={node.ty}
+              text-anchor={node.anchor}
+              class="hero-label hero-label--node"
+              fill="var(--color-ink)"
+            >
+              {node.label}
+            </text>
+            <text
+              x={node.tx}
+              y={node.tsub}
+              text-anchor={node.anchor}
+              class="hero-label hero-label--sub"
+              fill="var(--color-graphite)"
+            >
+              {node.sub}
+            </text>
+          </g>
+        ))
+      }
+
+      <!-- ── Annotations ──────────────────────────────────────────────── -->
+      <g class="hero-annotations">
+        {
+          annotations.map((annotation) => (
+            <text
+              x={annotation.x}
+              y={annotation.y}
+              text-anchor={annotation.anchor ?? 'start'}
+              class="hero-label hero-label--anno"
+              fill="var(--color-mist)"
+            >
+              {annotation.text}
+            </text>
+          ))
+        }
+      </g>
+
+      <!-- Diagram stamp, mirroring the caption convention of research figures -->
+      <text x="1104" y="736" text-anchor="end" class="hero-label hero-label--stamp" fill="var(--color-mist)">
+        CONCEPT DIAGRAM — NOT TO SCALE
+      </text>
+    </svg>
+  </div>
+</div>
+
+<style>
+  /* Type is set in viewBox units so the whole diagram scales as one plate. */
+  .hero-label {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hero-label--centre {
+    font-size: 17px;
+    letter-spacing: 0.22em;
+  }
+
+  .hero-label--node {
+    font-size: 19px;
+    letter-spacing: 0.2em;
+  }
+
+  .hero-label--sub {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+  }
+
+  .hero-label--anno {
+    font-size: 11px;
+    letter-spacing: 0.24em;
+  }
+
+  .hero-label--stamp {
+    font-size: 10px;
+    letter-spacing: 0.24em;
+  }
+
+  /* On narrow viewports the peripheral layer is dropped rather than shrunk —
+     a legible diagram beats a complete but unreadable one. */
+  @media (max-width: 47.9375rem) {
+    .hero-coordinates,
+    .hero-annotations {
+      display: none;
+    }
+
+    .hero-label--node {
+      font-size: 26px;
+    }
+
+    .hero-label--sub {
+      display: none;
+    }
+  }
+</style>

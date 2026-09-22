@@ -1,0 +1,164 @@
+---
+/**
+ * /guides — the editorial hub ("EXPLORE").
+ *
+ * Organised as category sections with an anchor index rather than a wall of
+ * cards or a JS filter: the content stays crawlable, readable without
+ * JavaScript, and keeps the site's editorial rhythm (brief, section 15).
+ */
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import ArticleCard from '@/components/ArticleCard.astro';
+import EditorialList from '@/components/EditorialList.astro';
+import { entrySlug, inLocale, sortEntries } from '@/lib/content';
+import { localizePath, useTranslations, type Locale } from '@/i18n/utils';
+import { breadcrumbSchema, buildSeo } from '@/lib/seo';
+import type { UIKey } from '@/i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const guides = sortEntries(inLocale(await getCollection('guides'), locale));
+
+/** Category order mirrors the brief's EXPLORE taxonomy. */
+const categoryOrder: { id: string; key: UIKey }[] = [
+  { id: 'guides', key: 'guides.category.guides' },
+  { id: 'comparison', key: 'guides.category.comparison' },
+  { id: 'curriculum', key: 'guides.category.curriculum' },
+  { id: 'admissions', key: 'guides.category.admissions' },
+  { id: 'strategy', key: 'guides.category.strategy' },
+  { id: 'universities', key: 'guides.category.universities' },
+];
+
+const sections = categoryOrder
+  .map((category) => ({
+    ...category,
+    label: t(category.key),
+    entries: guides.filter((entry) => entry.data.category === category.id),
+  }))
+  .filter((section) => section.entries.length > 0);
+
+const featured = guides.filter((entry) => entry.data.featured).slice(0, 2);
+
+const seo = buildSeo({
+  title: t('guides.title'),
+  description: t('guides.lede'),
+  locale,
+  path: '/guides',
+  jsonLd: [
+    breadcrumbSchema(
+      [
+        { name: t('common.home'), path: '/' },
+        { name: t('guides.title'), path: '/guides' },
+      ],
+      locale,
+    ),
+  ],
+});
+---
+
+<BaseLayout locale={locale} seo={seo}>
+  <PageHeader
+    locale={locale}
+    number="04"
+    eyebrow={t('nav.explore')}
+    title={[t('guides.title')]}
+    lede={t('guides.lede')}
+    crumbs={[
+      { name: t('common.home'), path: '/' },
+      { name: t('guides.title'), path: '/guides' },
+    ]}
+  />
+
+  <!-- ── Category index ────────────────────────────────────────────── -->
+  <nav class="edge-rule" aria-label={t('guides.categories')}>
+    <div class="u-container py-10">
+      <p data-reveal="fade" class="eyebrow">{t('guides.categories')}</p>
+      <ol class="mt-7 flex flex-wrap gap-x-8 gap-y-3">
+        {
+          sections.map((section, index) => (
+            <li>
+              <a
+                href={`#${section.id}`}
+                class="group flex items-baseline gap-2.5 transition-colors duration-300"
+              >
+                <span class="font-mono text-micro text-accent tabnum">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <span class="text-caption text-charcoal transition-colors duration-300 group-hover:text-accent">
+                  {section.label}
+                </span>
+                <span class="font-mono text-micro text-mist">
+                  ({section.entries.length})
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </nav>
+
+  <!-- ── Featured ──────────────────────────────────────────────────── -->
+  {
+    featured.length > 0 && (
+      <section class="edge-rule" aria-labelledby="featured-title">
+        <div class="u-container py-14">
+          <h2 id="featured-title" data-reveal="fade" class="eyebrow eyebrow-accent">
+            {t('guides.featured')}
+          </h2>
+
+          <EditorialList
+            class="mt-10"
+            locale={locale}
+            emphasis="large"
+            items={featured.map((entry) => ({
+              href: localizePath(`/guides/${entrySlug(entry)}`, locale),
+              title: entry.data.title,
+              summary: entry.data.summary,
+              meta: [t('common.readingMinutes', { minutes: entry.data.readingMinutes })],
+            }))}
+          />
+        </div>
+      </section>
+    )
+  }
+
+  <!-- ── Category sections ─────────────────────────────────────────── -->
+  {
+    sections.map((section) => (
+      <section class="edge-rule scroll-mt-28" id={section.id} aria-labelledby={`${section.id}-title`}>
+        <div class="u-container u-section">
+          <div class="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-3">
+            <h2 id={`${section.id}-title`} data-reveal="fade" class="eyebrow eyebrow-accent">
+              {section.label}
+            </h2>
+            <p class="meta-mono text-mist">
+              {String(section.entries.length).padStart(2, '0')}
+            </p>
+          </div>
+
+          <div class="mt-14 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+            {section.entries.map((entry) => (
+              <ArticleCard
+                title={entry.data.title}
+                summary={entry.data.summary}
+                href={localizePath(`/guides/${entrySlug(entry)}`, locale)}
+                category={section.label}
+                readingMinutes={entry.data.readingMinutes}
+                updatedAt={entry.data.updatedAt}
+                systems={entry.data.systems}
+                locale={locale}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    ))
+  }
+</BaseLayout>

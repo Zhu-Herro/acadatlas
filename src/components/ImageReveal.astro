@@ -1,0 +1,50 @@
+---
+/**
+ * ImageReveal — figure wrapper with a clip-path wipe.
+ *
+ * The platform deliberately uses original SVG / CSS diagrams instead of stock
+ * photography (brief, section 20), so this component treats its slot as a
+ * visual plane and normalises the caption styling for all of them.
+ */
+interface Props {
+  /** Figure number, e.g. "01". */
+  number?: string;
+  /** Caption text. */
+  caption?: string;
+  /** Right-hand qualifier, e.g. "概念示意 / NOT TO SCALE". */
+  note?: string;
+  ratio?: '16/9' | '4/3' | '1/1' | 'auto';
+  class?: string;
+}
+
+const { number, caption, note, ratio = 'auto', class: className = '' } = Astro.props;
+
+const ratioClass = {
+  '16/9': 'aspect-[16/9]',
+  '4/3': 'aspect-[4/3]',
+  '1/1': 'aspect-square',
+  auto: '',
+}[ratio];
+---
+
+<figure class:list={['flex flex-col', className]}>
+  <div data-reveal="mask" class:list={['relative w-full overflow-hidden', ratioClass]}>
+    <slot />
+  </div>
+
+  {
+    (caption || note) && (
+      <figcaption
+        data-reveal="fade"
+        style="--reveal-delay:320ms"
+        class="mt-5 flex flex-col gap-2 border-t border-rule pt-4 sm:flex-row sm:items-baseline sm:justify-between sm:gap-8"
+      >
+        <span class="flex items-baseline gap-2.5">
+          {number && <span class="font-mono text-micro uppercase text-accent tabnum">{number}</span>}
+          {caption && <span class="font-mono text-micro uppercase tracking-[0.14em] text-graphite">{caption}</span>}
+        </span>
+        {note && <span class="font-mono text-micro uppercase tracking-[0.14em] text-mist">{note}</span>}
+      </figcaption>
+    )
+  }
+</figure>

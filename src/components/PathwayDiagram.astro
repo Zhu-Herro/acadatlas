@@ -1,0 +1,304 @@
+---
+/**
+ * PathwayDiagram — "which systems lead where".
+ *
+ * Left column: curriculum systems. Right column: university destinations.
+ * Curves are drawn only where a route exists (from `src/data/pathways.ts`).
+ *
+ * Interactivity is purposeful and minimal: hovering or focusing a system
+ * isolates its routes and dims everything else, so a dense diagram becomes
+ * readable without a legend lookup. Keyboard users get the same behaviour via
+ * focus. Clicking a node navigates.
+ *
+ * The diagram expresses ROUTE RELATIONSHIPS ONLY — it is captioned as such.
+ */
+import { pathways } from '@/data/pathways';
+import { localizePath, useTranslations, type Locale } from '@/i18n/utils';
+
+interface Props {
+  locale: Locale;
+  class?: string;
+}
+
+const { locale, class: className = '' } = Astro.props;
+const t = useTranslations(locale);
+
+/** Curriculum systems shown on the left rail. */
+const systems = [
+  { slug: 'dse', label: 'DSE' },
+  { slug: 'ib', label: 'IB' },
+  { slug: 'ap', label: 'AP' },
+  { slug: 'a-level', label: 'A-LEVEL' },
+  { slug: 'igcse', label: 'IGCSE' },
+];
+
+const LEFT_X = 150;
+const RIGHT_X = 1050;
+const LEFT_START = 110;
+const LEFT_GAP = 135;
+const RIGHT_START = 60;
+const RIGHT_GAP = 105;
+
+const leftNodes = systems.map((system, index) => ({
+  ...system,
+  y: LEFT_START + index * LEFT_GAP,
+  href: localizePath(`/systems/${system.slug}`, locale),
+}));
+
+const rightNodes = pathways.map((destination, index) => ({
+  ...destination,
+  y: RIGHT_START + index * RIGHT_GAP,
+}));
+
+/** One curve per existing route. */
+const routes = leftNodes.flatMap((system) =>
+  rightNodes
+    .filter((destination) => destination.systems.includes(system.slug))
+    .map((destination) => ({ from: system, to: destination })),
+);
+---
+
+<div class:list={[className]}>
+  <div data-reveal="fade" class="pathway-diagram w-full overflow-hidden">
+    <svg
+      class="w-full"
+      viewBox="0 0 1200 780"
+      role="img"
+      aria-labelledby="pathway-diagram-title"
+      preserveAspectRatio="xMidYMid meet"
+    >
+      <title id="pathway-diagram-title">
+        {
+          locale === 'zh'
+            ? '教育体系与升学目的地之间的路径关系示意：DSE、IB、AP、A-Level、IGCSE 与各地大学的关系网络。'
+            : 'Route relationships between education systems and university destinations: DSE, IB, AP, A-Level and IGCSE mapped to destinations worldwide.'
+        }
+      </title>
+
+      <!-- Column captions -->
+      <text x={LEFT_X - 62} y="40" class="pd-caption" fill="var(--color-graphite)">
+        {locale === 'zh' ? '教育体系' : 'SYSTEM'}
+      </text>
+      <text x={RIGHT_X + 62} y="40" text-anchor="end" class="pd-caption" fill="var(--color-graphite)">
+        {locale === 'zh' ? '升学目的地' : 'DESTINATION'}
+      </text>
+      <path d="M88 56h124" stroke="var(--color-rule)" />
+      <path d="M988 56h124" stroke="var(--color-rule)" />
+
+      <!-- Route curves -->
+      <g fill="none" data-pd-routes>
+        {
+          routes.map((route) => (
+            <path
+              class="pd-route"
+              data-from={route.from.slug}
+              data-to={route.to.id}
+              d={`M 232 ${route.from.y} C 520 ${route.from.y}, 700 ${route.to.y}, 968 ${route.to.y}`}
+              stroke="var(--color-charcoal)"
+              stroke-width="1"
+              opacity="0.22"
+            />
+          ))
+        }
+      </g>
+
+      <!-- Left nodes -->
+      {
+        leftNodes.map((system) => (
+          <a
+            href={system.href}
+            class="pd-node"
+            data-pd-node={system.slug}
+            aria-label={`${system.label} — ${t('systems.exploreSystem')}`}
+          >
+            <line
+              x1={LEFT_X}
+              y1={system.y}
+              x2={LEFT_X + 76}
+              y2={system.y}
+              stroke="var(--color-rule)"
+              stroke-width="1"
+            />
+            <circle cx={LEFT_X} cy={system.y} r="6" fill="var(--color-ink)" />
+            <circle cx={LEFT_X} cy={system.y} r="12" fill="none" stroke="var(--color-ink)" stroke-width="1" opacity="0.35" />
+            <text
+              x={LEFT_X - 20}
+              y={system.y + 5}
+              text-anchor="end"
+              class="pd-label pd-label--system"
+              fill="var(--color-ink)"
+            >
+              {system.label}
+            </text>
+          </a>
+        ))
+      }
+
+      <!-- Right nodes -->
+      {
+        rightNodes.map((destination) => (
+          <g class="pd-destination" data-destination={destination.id}>
+            <line
+              x1={RIGHT_X - 76}
+              y1={destination.y}
+              x2={RIGHT_X}
+              y2={destination.y}
+              stroke="var(--color-rule)"
+              stroke-width="1"
+            />
+            <circle cx={RIGHT_X} cy={destination.y} r="4.5" fill="var(--color-accent)" />
+            <text
+              x={RIGHT_X + 20}
+              y={destination.y + 5}
+              class="pd-label pd-label--destination"
+              fill="var(--color-charcoal)"
+            >
+              {destination.name[locale]}
+            </text>
+            <text
+              x={RIGHT_X + 20}
+              y={destination.y + 22}
+              class="pd-label pd-label--group"
+              fill="var(--color-mist)"
+            >
+              {destination.group[locale]}
+            </text>
+          </g>
+        ))
+      }
+
+      <!-- Axis labels -->
+      <text x="600" y="748" text-anchor="middle" class="pd-caption" fill="var(--color-mist)">
+        {t('pathways.flowNote')}
+      </text>
+    </svg>
+  </div>
+
+  <!-- Legend: tells the reader what the curve opacity means -->
+  <p class="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-micro uppercase tracking-[0.14em] text-mist">
+    <span class="flex items-center gap-2">
+      <span aria-hidden="true" class="inline-block h-px w-6 bg-charcoal opacity-30"></span>
+      {t('pathways.connectedSystems')}
+    </span>
+    <span class="flex items-center gap-2">
+      <span aria-hidden="true" class="inline-block h-1.5 w-1.5 rounded-full bg-accent"></span>
+      {t('pathways.destinations')}
+    </span>
+  </p>
+</div>
+
+<style>
+  .pd-caption,
+  .pd-label {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pd-caption {
+    font-size: 12px;
+    letter-spacing: 0.24em;
+  }
+
+  .pd-label--system {
+    font-size: 21px;
+    letter-spacing: 0.18em;
+    fill: var(--color-ink);
+  }
+
+  .pd-label--destination {
+    font-size: 17px;
+    letter-spacing: 0.06em;
+  }
+
+  .pd-label--group {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+  }
+
+  .pd-route {
+    transition:
+      opacity 0.55s var(--ease-editorial),
+      stroke 0.55s var(--ease-editorial),
+      stroke-width 0.55s var(--ease-editorial);
+  }
+
+  /* Isolation mode: dim every route, then lift the ones we care about. */
+  .pathway-diagram.is-isolating .pd-route {
+    opacity: 0.07;
+  }
+
+  .pathway-diagram.is-isolating .pd-route.is-active {
+    opacity: 0.95;
+    stroke: var(--color-accent);
+    stroke-width: 1.6;
+  }
+
+  .pathway-diagram.is-isolating .pd-destination {
+    opacity: 0.4;
+  }
+
+  .pathway-diagram.is-isolating .pd-destination.is-active {
+    opacity: 1;
+  }
+
+  .pd-node {
+    cursor: pointer;
+  }
+
+  @media (max-width: 47.9375rem) {
+    .pd-label--group {
+      display: none;
+    }
+
+    .pd-label--destination {
+      font-size: 21px;
+    }
+  }
+</style>
+
+<script>
+  /**
+   * Progressive enhancement only: the diagram is fully legible as a static
+   * image, and hovering/focusing simply isolates the routes of one system.
+   */
+  const diagram = document.querySelector<HTMLElement>('.pathway-diagram');
+  const nodes = Array.from(document.querySelectorAll<HTMLElement>('[data-pd-node]'));
+  const routes = Array.from(document.querySelectorAll<SVGPathElement>('.pd-route'));
+  const destinations = Array.from(document.querySelectorAll<SVGGElement>('.pd-destination'));
+
+  if (diagram && nodes.length > 0) {
+    const isolate = (slug: string) => {
+      diagram.classList.add('is-isolating');
+
+      // Destinations reached by the focused system stay bright.
+      const reached = new Set<string>();
+
+      for (const route of routes) {
+        const active = route.dataset.from === slug;
+        route.classList.toggle('is-active', active);
+        if (active && route.dataset.to) reached.add(route.dataset.to);
+      }
+
+      for (const destination of destinations) {
+        destination.classList.toggle(
+          'is-active',
+          reached.has(destination.dataset.destination ?? ''),
+        );
+      }
+    };
+
+    const reset = () => {
+      diagram.classList.remove('is-isolating');
+      for (const route of routes) route.classList.remove('is-active');
+      for (const destination of destinations) destination.classList.remove('is-active');
+    };
+
+    for (const node of nodes) {
+      const slug = node.dataset.pdNode ?? '';
+      node.addEventListener('mouseenter', () => isolate(slug));
+      node.addEventListener('focus', () => isolate(slug));
+      node.addEventListener('mouseleave', reset);
+      node.addEventListener('blur', reset);
+    }
+  }
+</script>

@@ -1,0 +1,81 @@
+---
+/**
+ * SourceList — the platform's credibility surface (brief, section 24).
+ *
+ * Every content page ends with this component: official publishers, outbound
+ * links, the academic year the page applies to and the last-updated date.
+ * Nothing time-sensitive is published without it.
+ */
+import type { ResolvedSource } from '@/lib/sources';
+import { formatDate, useTranslations, type Locale } from '@/i18n/utils';
+
+interface Props {
+  sources: ResolvedSource[];
+  locale: Locale;
+  updatedAt?: Date;
+  academicYear?: string;
+  region?: string;
+}
+
+const { sources, locale, updatedAt, academicYear, region } = Astro.props;
+const t = useTranslations(locale);
+
+const meta = [
+  updatedAt ? { label: t('common.updated'), value: formatDate(updatedAt, locale) } : null,
+  academicYear ? { label: t('common.academicYear'), value: academicYear } : null,
+  region ? { label: t('common.region'), value: region } : null,
+].filter((item): item is { label: string; value: string } => item !== null);
+---
+
+<div class="flex flex-col gap-10">
+  <p class="max-w-2xl text-caption leading-relaxed text-graphite">
+    {t('common.sourcesIntro')}
+  </p>
+
+  <ol class="flex flex-col">
+    {
+      sources.map((source, index) => (
+        <li class="border-t border-rule">
+          <a
+            href={source.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="group flex items-start gap-5 py-5 transition-colors duration-300"
+          >
+            <span class="mt-0.5 font-mono text-micro text-accent tabnum">
+              {String(index + 1).padStart(2, '0')}
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-body text-ink transition-colors duration-300 group-hover:text-accent">
+                {source.label}
+              </span>
+              {source.note && (
+                <span class="mt-1.5 block text-caption leading-relaxed text-graphite">{source.note}</span>
+              )}
+              <span class="mt-2 block truncate font-mono text-micro text-mist">{source.href}</span>
+            </span>
+            <span
+              aria-hidden="true"
+              class="mt-1 shrink-0 font-mono text-caption text-mist transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent"
+            >
+              ↗
+            </span>
+          </a>
+        </li>
+      ))
+    }
+  </ol>
+
+  {
+    meta.length > 0 && (
+      <dl class="flex flex-wrap gap-x-10 gap-y-4 border-t border-rule pt-6">
+        {meta.map((item) => (
+          <div class="flex flex-col gap-1.5">
+            <dt class="font-mono text-micro uppercase tracking-[0.14em] text-mist">{item.label}</dt>
+            <dd class="meta-mono text-charcoal">{item.value}</dd>
+          </div>
+        ))}
+      </dl>
+    )
+  }
+</div>

@@ -1,0 +1,83 @@
+---
+/**
+ * EditorialList — the site's primary content listing pattern.
+ *
+ * Deliberately NOT a grid of rounded cards (brief, section 32). A numbered,
+ * hairline-ruled index where the number, title and metadata do the work and
+ * whitespace carries the hierarchy.
+ */
+import { formatDate, type Locale } from '@/i18n/utils';
+
+export interface EditorialItem {
+  /** Full URL — already localised. */
+  href: string;
+  title: string;
+  /** Short description. */
+  summary?: string;
+  /** Matrix of small metadata values (category, year, reading time…). */
+  meta?: string[];
+  /** Fine decimal, e.g. "01". Auto-generated when omitted. */
+  number?: string;
+  date?: Date;
+}
+
+interface Props {
+  items: EditorialItem[];
+  locale: Locale;
+  /** Renders the list as an ordered index with a heavier title scale. */
+  emphasis?: 'default' | 'large';
+  class?: string;
+}
+
+const { items, locale, emphasis = 'default', class: className = '' } = Astro.props;
+---
+
+<ol data-stagger class:list={['flex flex-col border-t border-rule', className]}>
+  {
+    items.map((item, index) => (
+      <li class="border-b border-rule">
+        <a
+          href={item.href}
+          class="group grid grid-cols-1 gap-x-8 gap-y-3 py-7 transition-colors duration-500 sm:grid-cols-[3.5rem_1fr] lg:py-8"
+        >
+          <span class="font-mono text-meta text-accent tabnum lg:pt-1.5">
+            {item.number ?? String(index + 1).padStart(2, '0')}
+          </span>
+
+          <span class="flex flex-col gap-3">
+            <span
+              class:list={[
+                'font-display text-ink transition-colors duration-300 group-hover:text-accent',
+                emphasis === 'large' ? 'text-h2' : 'text-h3',
+              ]}
+            >
+              {item.title}
+            </span>
+
+            {item.summary && (
+              <span
+                class:list={[
+                  'text-charcoal',
+                  emphasis === 'large' ? 'max-w-2xl text-body-lg' : 'max-w-xl text-caption',
+                ]}
+              >
+                {item.summary}
+              </span>
+            )}
+
+            {(item.meta?.length || item.date) && (
+              <span class="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                {item.meta?.map((value) => (
+                  <span class="font-mono text-micro uppercase tracking-[0.14em] text-mist">{value}</span>
+                ))}
+                {item.date && (
+                  <span class="font-mono text-micro text-mist">{formatDate(item.date, locale)}</span>
+                )}
+              </span>
+            )}
+          </span>
+        </a>
+      </li>
+    ))
+  }
+</ol>

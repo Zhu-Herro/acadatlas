@@ -1,0 +1,361 @@
+---
+/**
+ * CompareTool — the interactive comparison surface (brief, section 12).
+ *
+ * Design decisions:
+ *  • NOT an HTML table. Each dimension is an editorial block: number, label,
+ *    and one column per selected system, expandable per row.
+ *  • 2–4 systems, enforced in the UI and reflected in the URL (`?systems=`)
+ *    so a comparison can be bookmarked and shared.
+ *  • The full dataset and every UI string are serialised into a JSON payload,
+ *    keeping the controller logic-free of dictionary duplication and letting
+ *    the page ship zero extra network requests.
+ *  • Works without JS down to a readable static list; the controller only
+ *    adds selection, expansion and URL synchronisation.
+ */
+import type { ComparisonRecord } from '@/lib/profile';
+import type { Locale } from '@/i18n/ui';
+import { useTranslations } from '@/i18n/utils';
+import { comparisonDimensions, MAX_COMPARE, MIN_COMPARE } from '@/data/dimensions';
+
+interface Props {
+  records: ComparisonRecord[];
+  locale: Locale;
+}
+
+const { records, locale } = Astro.props;
+const t = useTranslations(locale);
+
+/** Everything the client controller needs, serialised once. */
+const payload = {
+  locale,
+  min: MIN_COMPARE,
+  max: MAX_COMPARE,
+  dimensions: comparisonDimensions.map((dimension) => ({
+    key: dimension.key,
+    label: t(dimension.labelKey),
+  })),
+  records: records.map((record) => ({
+    slug: record.slug,
+    name: record.name,
+    shortName: record.shortName,
+    fullName: record.fullName,
+    href: record.href,
+    values: record.values,
+  })),
+  copy: {
+    selected: t('compare.selected', { count: '__COUNT__' }),
+    empty: t('compare.empty'),
+    emptyHint: t('compare.emptyHint'),
+    maxReached: t('compare.maxReached'),
+    minHint: t('compare.minHint'),
+    clear: t('compare.clear'),
+    viewSystem: t('compare.viewSystem'),
+    expand: t('common.expand'),
+    collapse: t('common.collapse'),
+    referenceOnly: t('compare.referenceOnly'),
+    selector: t('compare.selector'),
+  },
+};
+---
+
+<div data-compare-tool class="flex flex-col gap-12">
+  <!-- ── Selector ───────────────────────────────────────────────────── -->
+  <div>
+    <div class="flex flex-wrap items-baseline justify-between gap-4">
+      <h2 class="eyebrow" id="compare-selector-label">{t('compare.selector')}</h2>
+      <p data-compare-count class="font-mono text-micro text-mist tabnum">
+        {t('compare.selected', { count: 0 })}
+      </p>
+    </div>
+
+    <div
+      data-compare-chips
+      role="group"
+      aria-labelledby="compare-selector-label"
+      class="mt-6 flex flex-wrap gap-2.5"
+    >
+      {
+        records.map((record) => (
+          <button
+            type="button"
+            data-compare-chip={record.slug}
+            aria-pressed="false"
+            class="compare-chip group flex items-baseline gap-2.5 border border-rule px-4 py-2.5 transition-colors duration-300 hover:border-ink"
+          >
+            <span class="font-mono text-micro uppercase tracking-[0.16em] text-ink">
+              {record.shortName}
+            </span>
+            <span class="max-w-40 truncate text-caption text-mist">{record.name}</span>
+          </button>
+        ))
+      }
+    </div>
+
+    <div class="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
+      <button
+        type="button"
+        data-compare-clear
+        class="font-mono text-micro uppercase tracking-[0.16em] text-graphite transition-colors duration-300 hover:text-accent"
+      >
+        {t('compare.clear')}
+      </button>
+      <p
+        data-compare-message
+        role="status"
+        class="font-mono text-micro uppercase tracking-[0.14em] text-accent"
+      >
+      </p>
+    </div>
+  </div>
+
+  <!-- ── Output ─────────────────────────────────────────────────────── -->
+  <div data-compare-output aria-live="polite">
+    <!-- Replaced by the controller. This empty state is what a no-JS reader sees. -->
+    <div data-compare-empty class="border-t border-rule pt-10">
+      <p class="font-display text-h3 text-ink">{t('compare.empty')}</p>
+      <p class="mt-4 text-caption text-graphite">{t('compare.emptyHint')}</p>
+    </div>
+  </div>
+
+  <p class="border-t border-rule pt-6 font-mono text-micro uppercase tracking-[0.14em] text-mist">
+    {t('compare.note')}
+  </p>
+</div>
+
+<script type="application/json" id="compare-payload" set:html={JSON.stringify(payload)}></script>
+
+<style>
+  /* Selected chip: accent border + accent text, no fill (keeps the page calm). */
+  .compare-chip[aria-pressed='true'] {
+    border-color: var(--color-accent);
+  }
+
+  .compare-chip[aria-pressed='true'] span:first-child {
+    color: var(--color-accent);
+  }
+
+  .compare-chip[aria-pressed='true'] span:last-child {
+    color: var(--color-charcoal);
+  }
+
+  /* Collapsed cells clamp to three lines; expansion is per dimension row. */
+  .compare-cell {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: opacity 0.4s var(--ease-editorial);
+  }
+
+  .compare-row[data-expanded='true'] .compare-cell {
+    -webkit-line-clamp: unset;
+    overflow: visible;
+  }
+</style>
+
+<script>
+  interface ComparePayload {
+    locale: string;
+    min: number;
+    max: number;
+    dimensions: { key: string; label: string }[];
+    records: {
+      slug: string;
+      name: string;
+      shortName: string;
+      fullName: string;
+      href: string;
+      values: Record<string, string>;
+    }[];
+    copy: Record<string, string>;
+  }
+
+  const payloadNode = document.getElementById('compare-payload');
+  const root = document.querySelector<HTMLElement>('[data-compare-tool]');
+
+  if (payloadNode && root) {
+    const payload = JSON.parse(payloadNode.textContent ?? '{}') as ComparePayload;
+    const { copy, dimensions, records, max, min } = payload;
+
+    const chips = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-compare-chip]'));
+    const output = root.querySelector<HTMLElement>('[data-compare-output]');
+    const countLabel = root.querySelector<HTMLElement>('[data-compare-count]');
+    const message = root.querySelector<HTMLElement>('[data-compare-message]');
+
+    /** Selection order matters: it defines the column order. */
+    let selected: string[] = [];
+
+    /** ── URL <-> state ───────────────────────────────────────────── */
+    function readFromUrl(): string[] {
+      const requested = new URLSearchParams(window.location.search).get('systems');
+      if (!requested) return [];
+      return requested
+        .split(',')
+        .map((slug) => slug.trim())
+        .filter((slug, index, list) => slug && list.indexOf(slug) === index)
+        .filter((slug) => records.some((record) => record.slug === slug))
+        .slice(0, max);
+    }
+
+    function writeToUrl(): void {
+      const url = new URL(window.location.href);
+      if (selected.length >= min) url.searchParams.set('systems', selected.join(','));
+      else url.searchParams.delete('systems');
+      window.history.replaceState({}, '', url);
+    }
+
+    /** ── Rendering ────────────────────────────────────────────────── */
+    function renderChips(): void {
+      for (const chip of chips) {
+        const slug = chip.dataset.compareChip ?? '';
+        const isOn = selected.includes(slug);
+        chip.setAttribute('aria-pressed', String(isOn));
+      }
+
+      if (countLabel) {
+        countLabel.textContent = copy.selected.replace('__COUNT__', String(selected.length));
+      }
+    }
+
+    function renderMessage(): void {
+      if (!message) return;
+      if (selected.length === max) message.textContent = '';
+      else if (selected.length === 0) message.textContent = '';
+      else if (selected.length < min) message.textContent = copy.minHint;
+      else message.textContent = '';
+    }
+
+    function renderOutput(): void {
+      if (!output) return;
+
+      if (selected.length < min) {
+        output.innerHTML = '';
+
+        const empty = document.createElement('div');
+        empty.className = 'border-t border-rule pt-10';
+        empty.innerHTML =
+          `<p class="font-display text-h3 text-ink">${copy.empty}</p>` +
+          `<p class="mt-4 text-caption text-graphite">${copy.emptyHint}</p>`;
+        output.append(empty);
+        return;
+      }
+
+      const active = selected
+        .map((slug) => records.find((record) => record.slug === slug))
+        .filter((record): record is ComparePayload['records'][number] => Boolean(record));
+
+      output.innerHTML = '';
+
+      // Column headings, repeated once at the top of the comparison.
+      const head = document.createElement('div');
+      head.className = 'compare-head sticky top-20 z-10 -mx-1 bg-paper/92 px-1 py-4 backdrop-blur';
+      head.innerHTML =
+        `<div class="grid gap-x-8 gap-y-4" style="grid-template-columns:repeat(${active.length},minmax(0,1fr))">` +
+        active
+          .map(
+            (record) =>
+              `<div class="flex flex-col gap-1.5 border-t border-ink pt-3">` +
+              `<span class="font-mono text-micro uppercase tracking-[0.16em] text-accent">${record.shortName}</span>` +
+              `<span class="text-caption text-graphite">${record.name}</span>` +
+              `<a href="${record.href}" class="link-underline mt-1 font-mono text-micro uppercase tracking-[0.14em]">${copy.viewSystem} →</a>` +
+              `</div>`,
+          )
+          .join('') +
+        `</div>`;
+      output.append(head);
+
+      // One block per dimension.
+      dimensions.forEach((dimension, index) => {
+        const row = document.createElement('section');
+        row.className = 'compare-row border-t border-rule py-8';
+        row.dataset.expanded = 'false';
+
+        row.innerHTML =
+          `<header class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3">` +
+          `<span class="flex items-baseline gap-3">` +
+          `<span class="font-mono text-micro text-accent tabnum">${String(index + 1).padStart(2, '0')}</span>` +
+          `<h3 class="text-h4 text-ink">${dimension.label}</h3>` +
+          `</span>` +
+          `<button type="button" data-compare-toggle class="font-mono text-micro uppercase tracking-[0.16em] text-graphite transition-colors duration-300 hover:text-accent">${copy.expand}</button>` +
+          `</header>` +
+          `<div class="mt-6 grid gap-x-8 gap-y-7" style="grid-template-columns:repeat(${active.length},minmax(0,1fr))">` +
+          active
+            .map(
+              (record) =>
+                `<div class="flex flex-col gap-3">` +
+                `<span class="font-mono text-micro uppercase tracking-[0.16em] text-mist lg:hidden">${record.shortName}</span>` +
+                `<p class="compare-cell text-caption leading-relaxed text-charcoal">${record.values[dimension.key] ?? ''}</p>` +
+                `</div>`,
+            )
+            .join('') +
+          `</div>`;
+
+        const toggle = row.querySelector<HTMLButtonElement>('[data-compare-toggle]');
+        toggle?.addEventListener('click', () => {
+          const expanded = row.dataset.expanded === 'true';
+          row.dataset.expanded = String(!expanded);
+          toggle.textContent = expanded ? copy.expand : copy.collapse;
+        });
+
+        output.append(row);
+      });
+
+      // Legend / disclaimer closes the comparison.
+      const footer = document.createElement('p');
+      footer.className =
+        'border-t border-rule pt-6 font-mono text-micro uppercase tracking-[0.14em] text-mist';
+      footer.textContent = copy.referenceOnly;
+      output.append(footer);
+    }
+
+    function renderAll(): void {
+      renderChips();
+      renderMessage();
+      renderOutput();
+      writeToUrl();
+    }
+
+    /** ── Interaction ──────────────────────────────────────────────── */
+    for (const chip of chips) {
+      chip.addEventListener('click', () => {
+        const slug = chip.dataset.compareChip ?? '';
+        const index = selected.indexOf(slug);
+
+        if (index >= 0) {
+          selected.splice(index, 1);
+        } else if (selected.length >= max) {
+          if (message) message.textContent = copy.maxReached;
+          return;
+        } else {
+          selected.push(slug);
+        }
+
+        renderAll();
+      });
+    }
+
+    root.querySelector('[data-compare-clear]')?.addEventListener('click', () => {
+      selected = [];
+      renderAll();
+    });
+
+    /** ── Boot ─────────────────────────────────────────────────────── */
+    selected = readFromUrl();
+    renderAll();
+
+    // Mobile: stack the comparison columns instead of squeezing them.
+    const applyResponsive = () => {
+      const columns = window.innerWidth < 768 ? 1 : selected.length;
+      root
+        .querySelectorAll<HTMLElement>('[data-compare-output] .grid')
+        .forEach((grid) => {
+          grid.style.gridTemplateColumns = `repeat(${columns},minmax(0,1fr))`;
+        });
+    };
+
+    window.addEventListener('resize', applyResponsive);
+    applyResponsive();
+    new MutationObserver(applyResponsive).observe(output ?? root, { childList: true });
+  }
+</script>

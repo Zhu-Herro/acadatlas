@@ -1,0 +1,137 @@
+---
+/**
+ * /pathways — university destinations and the systems that lead to them.
+ *
+ * Built from `src/data/pathways.ts`. The page expresses ROUTE RELATIONSHIPS
+ * only and says so in three places (intro, diagram caption, destination notes)
+ * because this is exactly the kind of page a reader might mistake for an
+ * admissions reference (brief, sections 9 & 24).
+ */
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import PathwayDiagram from '@/components/PathwayDiagram.astro';
+import { pathways } from '@/data/pathways';
+import { entrySlug, findEntry, inLocale } from '@/lib/content';
+import { localizePath, useTranslations, type Locale } from '@/i18n/utils';
+import { breadcrumbSchema, buildSeo } from '@/lib/seo';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const systems = inLocale(await getCollection('systems'), locale);
+
+const seo = buildSeo({
+  title: t('pathways.title'),
+  description: t('pathways.lede'),
+  locale,
+  path: '/pathways',
+  jsonLd: [
+    breadcrumbSchema(
+      [
+        { name: t('common.home'), path: '/' },
+        { name: t('pathways.title'), path: '/pathways' },
+      ],
+      locale,
+    ),
+  ],
+});
+---
+
+<BaseLayout locale={locale} seo={seo}>
+  <PageHeader
+    locale={locale}
+    number="03"
+    eyebrow={t('pathways.title')}
+    title={[t('pathways.title')]}
+    lede={t('pathways.lede')}
+    crumbs={[
+      { name: t('common.home'), path: '/' },
+      { name: t('pathways.title'), path: '/pathways' },
+    ]}
+  />
+
+  <!-- ── Diagram ───────────────────────────────────────────────────── -->
+  <section class="edge-rule" aria-labelledby="pathway-diagram-heading">
+    <div class="u-container py-16 lg:py-20">
+      <h2 id="pathway-diagram-heading" class="eyebrow">
+        {t('pathways.flowLabel')}
+      </h2>
+      <div class="mt-10">
+        <PathwayDiagram locale={locale} />
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Destinations ──────────────────────────────────────────────── -->
+  <section class="edge-rule" aria-labelledby="destinations-heading">
+    <div class="u-container u-section">
+      <h2 id="destinations-heading" data-reveal="fade" class="eyebrow eyebrow-accent">
+        {t('pathways.destinations')}
+      </h2>
+
+      <ul class="mt-14 flex flex-col border-t border-rule">
+        {
+          pathways.map((destination, index) => (
+            <li
+              id={destination.id}
+              class="scroll-mt-28 border-b border-rule"
+              data-reveal="up"
+              style={`--reveal-delay:${index * 50}ms`}
+            >
+              <div class="grid gap-6 py-9 lg:grid-cols-[3.5rem_minmax(0,16rem)_minmax(0,1fr)] lg:gap-x-10">
+                <span class="font-mono text-meta text-accent tabnum">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+
+                <div>
+                  <h3 class="font-display text-h3 text-ink">{destination.name[locale]}</h3>
+                  <p class="mt-2 font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                    {destination.group[locale]}
+                  </p>
+                </div>
+
+                <div>
+                  <p class="max-w-2xl text-caption leading-relaxed text-charcoal">
+                    {destination.note[locale]}
+                  </p>
+
+                  <div class="mt-5 flex flex-wrap items-baseline gap-x-6 gap-y-3">
+                    <span class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                      {t('pathways.connectedSystems')}
+                    </span>
+                    {
+                      destination.systems.map((systemSlug) => {
+                        const system = findEntry(systems, systemSlug, locale);
+                        if (!system) return null;
+                        return (
+                          <a
+                            href={localizePath(`/systems/${entrySlug(system)}`, locale)}
+                            class="link-underline font-mono text-micro uppercase tracking-[0.14em]"
+                          >
+                            {system.data.shortName}
+                          </a>
+                        );
+                      })
+                    }
+                  </div>
+                </div>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+
+      <p
+        data-reveal="fade"
+        class="mt-12 max-w-3xl border-l border-accent pl-5 text-caption leading-relaxed text-graphite"
+      >
+        {t('pathways.note')}
+      </p>
+    </div>
+  </section>
+</BaseLayout>

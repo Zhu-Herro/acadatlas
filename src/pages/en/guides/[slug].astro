@@ -1,0 +1,15 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection } from 'astro:content';
+import { collectSlugs } from '@/lib/content';
+import GuidePage from '@/views/GuidePage.astro';
+
+export const getStaticPaths = (async () => {
+  const entries = await getCollection('guides');
+  return collectSlugs(entries).map((slug) => ({ params: { slug } }));
+}) satisfies GetStaticPaths;
+
+const { slug } = Astro.params as { slug: string };
+---
+
+<GuidePage slug={slug} locale="en" />

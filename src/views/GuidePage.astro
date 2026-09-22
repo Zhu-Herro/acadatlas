@@ -1,0 +1,167 @@
+---
+/**
+ * Guide article page.
+ *
+ * Structure mirrors a high-end publication (brief, section 14):
+ *   category line → oversized title → metadata rule → generated hero →
+ *   table of contents → body → sources → related articles
+ *
+ * The body is Markdown rendered through `editorial-prose`, so authors never
+ * touch layout.
+ */
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ArticleHero from '@/components/ArticleHero.astro';
+import SourceList from '@/components/SourceList.astro';
+import RelatedContent from '@/components/RelatedContent.astro';
+import { createLinker, inLocale, resolveWithFallback, sortEntries } from '@/lib/content';
+import { resolveSources } from '@/lib/sources';
+import { localizePath, useTranslations, type Locale } from '@/i18n/utils';
+import { articleSchema, breadcrumbSchema, buildSeo } from '@/lib/seo';
+import type { UIKey } from '@/i18n/ui';
+
+interface Props {
+  slug: string;
+  locale: Locale;
+}
+
+const { slug, locale } = Astro.props;
+const t = useTranslations(locale);
+
+const allGuides = await getCollection('guides');
+const resolved = resolveWithFallback(allGuides, slug, locale);
+
+if (!resolved) {
+  return Astro.redirect(localizePath('/404', locale), 302);
+}
+
+const { entry } = resolved;
+const { Content, headings } = await render(entry);
+
+const pagePath = `/guides/${slug}`;
+const categoryLabel = t(`guides.category.${entry.data.category}` as UIKey);
+
+const sources = resolveSources(entry.data.sources);
+
+/** Table of contents from the Markdown headings (h2 / h3 only). */
+const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+
+const linkGuide = createLinker(sortEntries(inLocale(allGuides, locale)), '/guides');
+const related = entry.data.related
+  .map((relatedSlug) => linkGuide(relatedSlug, locale))
+  .filter((link): link is NonNullable<typeof link> => link !== null);
+
+const crumbs = [
+  { name: t('common.home'), path: '/' },
+  { name: t('guides.title'), path: '/guides' },
+  { name: entry.data.title, path: pagePath },
+];
+
+const seo = buildSeo({
+  title: entry.data.title,
+  description: entry.data.summary,
+  locale,
+  path: pagePath,
+  type: 'article',
+  publishedTime: entry.data.publishedAt,
+  modifiedTime: entry.data.updatedAt,
+  jsonLd: [
+    articleSchema({
+      title: entry.data.title,
+      description: entry.data.summary,
+      path: pagePath,
+      locale,
+      publishedTime: entry.data.publishedAt,
+      modifiedTime: entry.data.updatedAt,
+      section: categoryLabel,
+      keywords: entry.data.tags,
+    }),
+    breadcrumbSchema(
+      crumbs.map((crumb) => ({ name: crumb.name, path: crumb.path })),
+      locale,
+    ),
+  ],
+});
+---
+
+<BaseLayout locale={locale} seo={seo}>
+  <ArticleHero
+    locale={locale}
+    category={categoryLabel}
+    kicker={entry.data.kicker}
+    title={entry.data.title}
+    lede={entry.data.lede}
+    systems={entry.data.systems.map((value) => value.toUpperCase())}
+    publishedAt={entry.data.publishedAt}
+    updatedAt={entry.data.updatedAt}
+    readingMinutes={entry.data.readingMinutes}
+    heroVariant={entry.data.heroVariant}
+    region={entry.data.region}
+    academicYear={entry.data.academicYear}
+    crumbs={crumbs}
+  />
+
+  <!-- ── Body + contents rail ──────────────────────────────────────── -->
+  <div class="edge-rule">
+    <div class="u-container py-16 lg:py-20">
+      <div class="grid gap-12 lg:grid-cols-12 lg:gap-x-16">
+        <!-- Sticky contents -->
+        <aside class="lg:col-span-3">
+          {
+            toc.length > 0 && (
+              <nav aria-label={t('common.onThisPage')} class="lg:sticky lg:top-32">
+                <h2 class="eyebrow">{t('common.onThisPage')}</h2>
+                <ol class="mt-6 flex flex-col gap-3">
+                  {toc.map((heading) => (
+                    <li class:list={[heading.depth === 3 && 'pl-5']}>
+                      <a
+                        href={`#${heading.slug}`}
+                        class="text-caption leading-snug text-graphite transition-colors duration-300 hover:text-accent"
+                      >
+                        {heading.text}
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              </nav>
+            )
+          }
+        </aside>
+
+        <!-- Prose -->
+        <div class="lg:col-span-8 lg:col-start-5">
+          <div class="editorial-prose max-w-2xl">
+            <Content />
+          </div>
+
+          {
+            sources.length > 0 && (
+              <section class="mt-20 border-t border-rule pt-12" aria-labelledby="article-sources">
+                <h2 id="article-sources" class="eyebrow eyebrow-accent">
+                  {t('common.sources')}
+                </h2>
+                <div class="mt-8">
+                  <SourceList
+                    sources={sources}
+                    locale={locale}
+                    updatedAt={entry.data.updatedAt}
+                    academicYear={entry.data.academicYear}
+                    region={entry.data.region}
+                  />
+                </div>
+              </section>
+            )
+          }
+
+          {
+            related.length > 0 && (
+              <section class="mt-20 border-t border-rule pt-12">
+                <RelatedContent items={related} locale={locale} label={t('common.relatedArticles')} />
+              </section>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

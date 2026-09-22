@@ -1,0 +1,147 @@
+---
+/**
+ * GeneratedVisual — the platform's stand-in for stock photography.
+ *
+ * Four original code-drawn plates, selected per entry via the `heroVariant`
+ * frontmatter field, so every article gets a consistent, on-brand visual
+ * system instead of an unpredictable mix of raster images (brief, section 20).
+ *
+ * All variants share the same canvas (1200 × 420) and the same token palette,
+ * which is what makes the image system feel unified.
+ */
+import type { Locale } from '@/i18n/ui';
+
+interface Props {
+  variant?: 'network' | 'chain' | 'grid' | 'orbit';
+  locale: Locale;
+  class?: string;
+}
+
+const { variant = 'network', locale, class: className = '' } = Astro.props;
+
+const caption =
+  locale === 'zh' ? '抽象示意图 · 非数据图表' : 'Abstract diagram · not a data chart';
+
+/** Shared labels keep the plates feeling like one family. */
+const plateLabel = {
+  network: locale === 'zh' ? '体系关系网络' : 'SYSTEM RELATION NETWORK',
+  chain: locale === 'zh' ? '路径链条' : 'PATHWAY CHAIN',
+  grid: locale === 'zh' ? '维度矩阵' : 'DIMENSION MATRIX',
+  orbit: locale === 'zh' ? '升学轨道' : 'PROGRESSION ORBIT',
+}[variant];
+---
+
+<div class:list={['relative w-full', className]}>
+  <svg
+    class="generated-visual w-full"
+    viewBox="0 0 1200 420"
+    role="img"
+    aria-label={plateLabel}
+    preserveAspectRatio="xMidYMid slice"
+  >
+    <!-- Faint baseline grid, shared by every variant -->
+    <g stroke="var(--color-rule)" stroke-width="1" opacity="0.7">
+      <path d="M0 105h1200M0 210h1200M0 315h1200" />
+    </g>
+
+    {
+      variant === 'network' && (
+        <g fill="none">
+          <g stroke="var(--color-charcoal)" stroke-width="1" opacity="0.45">
+            <path d="M180 300 420 150 660 300 900 130 1050 300" />
+            <path d="M180 300 660 300M420 150 900 130M660 300 1050 300" />
+          </g>
+          <g fill="var(--color-ink)">
+            <circle cx="180" cy="300" r="7" />
+            <circle cx="420" cy="150" r="7" />
+            <circle cx="660" cy="300" r="7" />
+            <circle cx="900" cy="130" r="7" />
+            <circle cx="1050" cy="300" r="7" />
+          </g>
+          <g fill="none" stroke="var(--color-accent)" stroke-width="1.6">
+            <circle cx="420" cy="150" r="20" />
+            <circle cx="900" cy="130" r="20" />
+          </g>
+          <g stroke="var(--color-rule)" stroke-width="1" stroke-dasharray="4 6">
+            <path d="M180 300V360M420 150V360M660 300V360M900 130V360M1050 300V360" />
+          </g>
+        </g>
+      )
+    }
+
+    {
+      variant === 'chain' && (
+        <g>
+          <path d="M120 210h960" stroke="var(--color-rule)" stroke-width="1" />
+          {[0, 1, 2, 3, 4, 5].map((index) => (
+            <g>
+              <rect
+                x={120 + index * 192}
+                y={index % 2 === 0 ? 160 : 240}
+                width="44"
+                height="44"
+                fill="var(--color-paper-raised)"
+                stroke={index === 2 ? 'var(--color-accent)' : 'var(--color-ink)'}
+                stroke-width={index === 2 ? 1.6 : 1}
+              />
+              <circle
+                cx={142 + index * 192}
+                cy={index % 2 === 0 ? 182 : 262}
+                r="5"
+                fill={index === 2 ? 'var(--color-accent)' : 'var(--color-ink)'}
+              />
+            </g>
+          ))}
+          <path d="M1040 210h60" stroke="var(--color-accent)" stroke-width="1.4" />
+        </g>
+      )
+    }
+
+    {
+      variant === 'grid' && (
+        <g>
+          {Array.from({ length: 9 }).map((_, column) =>
+            Array.from({ length: 5 }).map((__, row) => (
+              <circle
+                cx={120 + column * 120}
+                cy={90 + row * 60}
+                r={column === row ? 4.5 : 2.6}
+                fill={column === row ? 'var(--color-accent)' : 'var(--color-mist)'}
+              />
+            )),
+          )}
+          <path d="M120 90 1080 330" stroke="var(--color-accent)" stroke-width="1" opacity="0.5" />
+        </g>
+      )
+    }
+
+    {
+      variant === 'orbit' && (
+        <g fill="none">
+          <ellipse cx="600" cy="210" rx="460" ry="170" stroke="var(--color-rule)" stroke-width="1" />
+          <ellipse cx="600" cy="210" rx="330" ry="120" stroke="var(--color-rule)" stroke-width="1" stroke-dasharray="3 7" />
+          <ellipse cx="600" cy="210" rx="180" ry="65" stroke="var(--color-rule)" stroke-width="1" />
+          <circle cx="600" cy="210" r="6" fill="var(--color-accent)" />
+          <circle cx="1060" cy="210" r="8" fill="var(--color-ink)" />
+          <circle cx="270" cy="210" r="8" fill="var(--color-ink)" />
+          <circle cx="600" cy="40" r="6" fill="var(--color-ink)" />
+          <circle cx="600" cy="380" r="6" fill="var(--color-ink)" />
+          <path d="M600 210 1060 210" stroke="var(--color-accent)" stroke-width="1.4" />
+        </g>
+      )
+    }
+
+    <!-- Plate label, bottom-left, in the site's mono voice -->
+    <text x="60" y="392" class="gv-label" fill="var(--color-mist)">{plateLabel}</text>
+    <text x="1140" y="392" text-anchor="end" class="gv-label" fill="var(--color-mist)">{caption}</text>
+  </svg>
+</div>
+
+<style>
+  .gv-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+  }
+</style>

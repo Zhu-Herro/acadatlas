@@ -1,0 +1,87 @@
+---
+/**
+ * PageHeader — the standard opening block for every non-home page.
+ *
+ * Gives all index pages the same entrance: breadcrumb, numbered eyebrow,
+ * large editorial title, lede, and optional right-hand metadata column.
+ */
+import Breadcrumb, { type Crumb } from './Breadcrumb.astro';
+import { useTranslations, type Locale } from '@/i18n/utils';
+
+interface Props {
+  locale: Locale;
+  /** Mono eyebrow, e.g. "教育体系" or "EDUCATION SYSTEMS". */
+  eyebrow?: string;
+  number?: string;
+  title: string | string[];
+  lede?: string;
+  crumbs?: Crumb[];
+  /** Right column content (metrics, meta rows…). */
+  class?: string;
+}
+
+const {
+  locale,
+  eyebrow,
+  number,
+  title,
+  lede,
+  crumbs,
+  class: className = '',
+} = Astro.props;
+
+const t = useTranslations(locale);
+const lines = Array.isArray(title) ? title : [title];
+---
+
+<header class:list={['relative', className]}>
+  <div class="u-container pb-16 pt-10 sm:pt-14 lg:pb-20">
+    {crumbs && crumbs.length > 0 && (
+      <div data-reveal="fade" class="mb-12">
+        <Breadcrumb items={crumbs} locale={locale} label={t('nav.breadcrumb')} />
+      </div>
+    )}
+
+    <div class="grid gap-10 lg:grid-cols-12 lg:gap-x-12">
+      <div class="lg:col-span-8">
+        {
+          eyebrow && (
+            <div
+              data-reveal="fade"
+              class="flex items-baseline gap-2.5 font-mono text-micro uppercase tracking-[0.18em] tabnum"
+            >
+              {number && <span class="text-accent">{number}</span>}
+              {number && <span aria-hidden="true" class="text-rule">/</span>}
+              <span class="text-graphite">{eyebrow}</span>
+            </div>
+          )
+        }
+
+        <h1 data-stagger class="mt-7 font-display text-h1 text-ink">
+          {
+            lines.map((line) => (
+              <span class="block">{line}</span>
+            ))
+          }
+        </h1>
+      </div>
+
+      {
+        lede && (
+          <div class="lg:col-span-4 lg:pt-3">
+            <p
+              data-reveal="up"
+              style="--reveal-delay:200ms"
+              class="max-w-lg border-t border-rule pt-6 text-body-lg leading-relaxed text-charcoal"
+            >
+              {lede}
+            </p>
+            <slot name="aside" />
+          </div>
+        )
+      }
+
+      {!lede && <slot name="aside" />}
+    </div>
+  </div>
+</header>

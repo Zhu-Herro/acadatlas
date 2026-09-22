@@ -1,0 +1,20 @@
+---
+/**
+ * `/systems/[slug]` — one page per curriculum system, per locale.
+ * Slugs are derived from the content collection so the routes can never fall
+ * out of sync with the content tree.
+ */
+import type { GetStaticPaths } from 'astro';
+import { getCollection } from 'astro:content';
+import { collectSlugs } from '@/lib/content';
+import ProfilePage from '@/views/ProfilePage.astro';
+
+export const getStaticPaths = (async () => {
+  const entries = await getCollection('systems');
+  return collectSlugs(entries).map((slug) => ({ params: { slug } }));
+}) satisfies GetStaticPaths;
+
+const { slug } = Astro.params as { slug: string };
+---
+
+<ProfilePage kind="system" slug={slug} locale="zh" />

@@ -1,0 +1,48 @@
+---
+/**
+ * Metric — a single number worth animating.
+ * The digits count up once the element scrolls into view (see motion.ts).
+ * Under reduced-motion the final value is written immediately.
+ */
+interface Props {
+  value: string;
+  /** Numeric target for the count-up. Omit for non-numeric metrics. */
+  countTo?: number;
+  decimals?: number;
+  prefix?: string;
+  suffix?: string;
+  label: string;
+  /** Short qualifier shown under the label. */
+  note?: string;
+  class?: string;
+}
+
+const {
+  value,
+  countTo,
+  decimals = 0,
+  prefix = '',
+  suffix = '',
+  label,
+  note,
+  class: className = '',
+} = Astro.props;
+
+const isAnimated = typeof countTo === 'number';
+---
+
+<div class:list={['flex flex-col gap-3', className]}>
+  <p
+    class="font-display text-h2 leading-none text-ink tabnum"
+    data-count-to={isAnimated ? String(countTo) : undefined}
+    data-count-decimals={isAnimated ? String(decimals) : undefined}
+    data-count-prefix={prefix}
+    data-count-suffix={suffix}
+  >
+    {value}
+  </p>
+  <div>
+    <p class="text-caption text-charcoal">{label}</p>
+    {note && <p class="mt-1 meta-mono text-mist">{note}</p>}
+  </div>
+</div>

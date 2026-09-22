@@ -1,0 +1,124 @@
+---
+/**
+ * ArticleHero — the opening block of a guide.
+ *
+ * Built to read like a high-end publication rather than a blog post
+ * (brief, section 14): category line, cross-referenced systems, an oversized
+ * title, then a metadata rule carrying date and reading time — followed by a
+ * generated visual, never a stock photograph.
+ */
+import ImageReveal from './ImageReveal.astro';
+import Breadcrumb, { type Crumb } from './Breadcrumb.astro';
+import GeneratedVisual from './GeneratedVisual.astro';
+import { formatDate, useTranslations, type Locale } from '@/i18n/utils';
+
+interface Props {
+  locale: Locale;
+  category: string;
+  kicker?: string;
+  title: string;
+  lede: string;
+  systems?: string[];
+  publishedAt: Date;
+  updatedAt: Date;
+  readingMinutes: number;
+  heroVariant?: 'network' | 'chain' | 'grid' | 'orbit';
+  crumbs?: Crumb[];
+  region?: string;
+  academicYear?: string;
+}
+
+const {
+  locale,
+  category,
+  kicker,
+  title,
+  lede,
+  systems = [],
+  publishedAt,
+  updatedAt,
+  readingMinutes,
+  heroVariant = 'network',
+  crumbs,
+  region,
+  academicYear,
+} = Astro.props;
+
+const t = useTranslations(locale);
+
+const meta = [
+  { label: t('common.published'), value: formatDate(publishedAt, locale, true) },
+  { label: t('common.updated'), value: formatDate(updatedAt, locale, true) },
+  { label: t('common.readingTime'), value: t('common.readingMinutes', { minutes: readingMinutes }) },
+  region ? { label: t('common.region'), value: region } : null,
+  academicYear ? { label: t('common.academicYear'), value: academicYear } : null,
+].filter((item): item is { label: string; value: string } => item !== null);
+---
+
+<article>
+  <header class="u-container pb-14 pt-10 sm:pt-14">
+    {crumbs && crumbs.length > 0 && (
+      <div data-reveal="fade" class="mb-10">
+        <Breadcrumb items={crumbs} locale={locale} label={t('nav.breadcrumb')} />
+      </div>
+    )}
+
+    <div class="grid gap-10 lg:grid-cols-12 lg:gap-x-12">
+      <div class="lg:col-span-9">
+        <div
+          data-reveal="fade"
+          class="flex flex-wrap items-baseline gap-x-5 gap-y-2 font-mono text-micro uppercase tracking-[0.18em]"
+        >
+          <span class="text-accent">{category}</span>
+          {kicker && <span class="text-mist">{kicker}</span>}
+          {
+            systems.length > 0 && (
+              <span class="text-graphite">{systems.join(' × ')}</span>
+            )
+          }
+        </div>
+
+        <h1 data-stagger class="mt-7 max-w-4xl font-display text-h1 text-ink">
+          <span class="block">{title}</span>
+        </h1>
+
+        <p
+          data-reveal="up"
+          style="--reveal-delay:180ms"
+          class="mt-8 max-w-2xl text-lead text-charcoal"
+        >
+          {lede}
+        </p>
+      </div>
+    </div>
+
+    <!-- Metadata rule -->
+    <dl
+      data-reveal="fade"
+      style="--reveal-delay:260ms"
+      class="mt-12 flex flex-wrap gap-x-12 gap-y-6 border-t border-rule pt-6"
+    >
+      {
+        meta.map((item) => (
+          <div class="flex flex-col gap-1.5">
+            <dt class="font-mono text-micro uppercase tracking-[0.14em] text-mist">{item.label}</dt>
+            <dd class="meta-mono text-charcoal">{item.value}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </header>
+
+  <!-- Generated hero visual -->
+  <div class="u-container pb-16 lg:pb-20">
+    <ImageReveal
+      number="00"
+      caption={`${category} — ${t('common.contents')}`}
+      note={t('common.conceptDisclaimer')}
+    >
+      <div class="border border-rule bg-paper-raised">
+        <GeneratedVisual variant={heroVariant} locale={locale} />
+      </div>
+    </ImageReveal>
+  </div>
+</article>

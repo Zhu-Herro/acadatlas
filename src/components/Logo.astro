@@ -1,0 +1,45 @@
+---
+/**
+ * Wordmark. The brand string comes from `site.config.ts` — never hard-coded.
+ * The mark is a small original SVG (an ascending node column) that echoes the
+ * education-network visual language used across the site.
+ */
+import { site } from '@/site.config';
+import { localizePath, type Locale } from '@/i18n/utils';
+
+interface Props {
+  locale: Locale;
+  /** `sm` for the sticky header, `lg` for the footer / hero. */
+  size?: 'sm' | 'lg';
+}
+
+const { locale, size = 'sm' } = Astro.props;
+---
+
+<a
+  href={localizePath('/', locale)}
+  class:list={['group inline-flex items-baseline gap-2.5 text-ink', size === 'lg' && 'gap-3']}
+  aria-label={`${site.name} — ${site.tagline[locale]}`}
+>
+  <svg
+    class:list={['shrink-0 translate-y-[0.08em] text-accent', size === 'lg' ? 'h-4 w-4' : 'h-3 w-3']}
+    viewBox="0 0 14 14"
+    fill="none"
+    aria-hidden="true"
+  >
+    <path d="M1 13V9" stroke="currentColor" stroke-width="1.4" stroke-linecap="square" />
+    <path d="M7 13V5" stroke="currentColor" stroke-width="1.4" stroke-linecap="square" />
+    <path d="M13 13V1" stroke="currentColor" stroke-width="1.4" stroke-linecap="square" />
+  </svg>
+  <span
+    class:list={[
+      'font-sans font-medium uppercase leading-none',
+      size === 'lg'
+        ? 'text-[1.0625rem] tracking-[0.34em]'
+        : 'text-[0.8125rem] tracking-[0.3em]',
+      'transition-colors duration-300 group-hover:text-accent',
+    ]}
+  >
+    {site.name}
+  </span>
+</a>
