@@ -1,0 +1,86 @@
+---
+/**
+ * EvidenceNote — the visible half of the preparation guardrail.
+ *
+ * Preparation content mixes official facts with practical judgement, and the
+ * reader is entitled to know which they are looking at. This component prints
+ * that distinction on the page, and carries the paid-partnership disclosure
+ * when one applies.
+ *
+ * It is deliberately quiet typographically — a hairline block, not a warning
+ * banner — but it is never hidden, never below the fold of the article header,
+ * and never rendered conditionally on whether a sponsor would prefer otherwise.
+ */
+import { useTranslations, type Locale } from '@/i18n/utils';
+import type { UIKey } from '@/i18n/ui';
+
+export type EvidenceType = 'official' | 'structural' | 'editorial';
+
+interface Props {
+  evidenceType: EvidenceType;
+  locale: Locale;
+  academicYear?: string;
+  sponsored?: boolean;
+  sponsorName?: string;
+  class?: string;
+}
+
+const {
+  evidenceType,
+  locale,
+  academicYear,
+  sponsored = false,
+  sponsorName,
+  class: className = '',
+} = Astro.props;
+
+const t = useTranslations(locale);
+
+const labelKey: Record<EvidenceType, UIKey> = {
+  official: 'evidence.official',
+  structural: 'evidence.structural',
+  editorial: 'evidence.editorial',
+};
+
+const noteKey: Record<EvidenceType, UIKey> = {
+  official: 'evidence.officialNote',
+  structural: 'evidence.structuralNote',
+  editorial: 'evidence.editorialNote',
+};
+---
+
+<div class:list={['flex flex-col gap-3 border-y border-rule py-4', className]}>
+  <div class="flex flex-wrap items-baseline gap-x-5 gap-y-2">
+    <span class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+      {t('evidence.label')}
+    </span>
+    <span class="font-mono text-micro uppercase tracking-[0.14em] text-accent">
+      {t(labelKey[evidenceType])}
+    </span>
+    {
+      academicYear && (
+        <span class="font-mono text-micro text-mist">{academicYear}</span>
+      )
+    }
+  </div>
+
+  <p class="max-w-2xl text-caption leading-relaxed text-graphite">
+    {t(noteKey[evidenceType])}
+  </p>
+
+  {
+    sponsored && (
+      <p class="mt-1 max-w-2xl border-l-2 border-accent pl-4 text-caption leading-relaxed text-charcoal">
+        <span class="font-mono text-micro uppercase tracking-[0.14em] text-accent">
+          {locale === 'zh' ? '商业合作' : 'Paid partnership'}
+        </span>
+        {sponsorName && <span class="ml-3">{sponsorName}</span>}
+        <span class="mt-1 block text-graphite">
+          {locale === 'zh'
+            ? '本页包含商业合作内容，已明确标注。合作方不影响本站对其他选项的评估。'
+            : 'This page contains paid partnership content, clearly disclosed. The partner has no influence over our assessment of alternatives.'}
+        </span>
+      </p>
+    )
+  }
+</div>

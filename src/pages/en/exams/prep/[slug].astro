@@ -1,0 +1,15 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection } from 'astro:content';
+import { collectSlugs } from '@/lib/content';
+import PrepArticlePage from '@/views/PrepArticlePage.astro';
+
+export const getStaticPaths = (async () => {
+  const entries = await getCollection('prep');
+  return collectSlugs(entries).map((slug) => ({ params: { slug } }));
+}) satisfies GetStaticPaths;
+
+const { slug } = Astro.params as { slug: string };
+---
+
+<PrepArticlePage slug={slug} locale="en" />

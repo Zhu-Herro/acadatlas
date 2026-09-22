@@ -32,7 +32,8 @@ const zh = {
   // Navigation -------------------------------------------------------------
   'nav.explore': '探索',
   'nav.systems': '教育体系',
-  'nav.exams': '考试体系',
+  'nav.exams': '考试与备考',
+  'nav.prep': '备考指南',
   'nav.pathways': '升学路径',
   'nav.guides': '教育指南',
   'nav.resources': '资源中心',
@@ -194,9 +195,9 @@ const zh = {
   'systems.notFound': '未找到该教育体系',
 
   // Exams ------------------------------------------------------------------
-  'exams.title': '考试与评估',
+  'exams.title': '考试与备考',
   'exams.lede':
-    '考试不是课程体系。它是评估工具——用于衡量学生已经掌握的内容，或用于大学录取判断。',
+    '考试分两类：一类是课程体系自带的评估，决定你能否取得资格；另一类独立于所有体系，因升学方向或语言要求而额外参加。本节先把两类放在一起，让你看清「要考哪些试」，再进入「怎么准备」。',
   'exams.note':
     'SAT / ACT 属于大学入学标准化考试；IELTS / TOEFL 属于语言能力测试。二者都不构成完整的课程路径，也不产生学位或毕业资格。',
   'exams.familyStandardised': '大学入学标准化考试',
@@ -387,7 +388,9 @@ const zh = {
   'sectionNav.label': '本板块',
   'sectionNote.systemsOverview': '逐个介绍各国际课程体系的结构、评估与升学方向。',
   'sectionNote.compare': '把 2–4 个体系放在同一组维度上并排比较。',
-  'sectionNote.examsOverview': '区分入学标准化考试与语言测试，说明它们与课程体系的关系。',
+  'sectionNote.examsOverview':
+    '从「要考哪些试」到「怎么准备」：体系内评估与独立考试放在一起看。',
+  'sectionNote.prep': '按体系与科目组织的备考方法、时间轴与常见难点。',
   'sectionNote.pathways': '不同教育体系与全球升学目的地之间的路径关系。',
   'sectionNote.mainland': '内地大学的两条官方升学渠道、关键标准与官方时间线。',
   'sectionNote.overseas': '香港、英国、美国、加拿大、澳大利亚、新加坡的录取方式与评估侧重。',
@@ -497,6 +500,73 @@ const zh = {
   'integrity.title': '内容完整性报告',
   'integrity.lede': '构建期自动生成的溯源检查结果，用于保证没有任何无来源的时效性内容被发布。',
 
+  // Examinations hub (section 02) -----------------------------------------
+  'exams.comboTitle': '我该考哪些试',
+  'exams.comboLede':
+    '左边是课程体系自带的评估——不可避免；右边是因升学方向或语言要求而额外参加的考试——视目标而定。',
+  'exams.comboNote':
+    '本表说明的是结构，不是院校要求。是否要求某一项考试、能否豁免，由院校当年政策决定。',
+  'exams.comboInternal': '体系内评估',
+  'exams.comboOutcome': '产出',
+  'exams.comboExtra': '常见加考',
+  'exams.comboConditional': '视目标而定',
+  'exams.comboNone': '通常无加考',
+  'exams.internalTitle': '体系内评估',
+  'exams.internalLede':
+    'DSE、A-Level、IGCSE、IB 与 AP 的考试结构、官方政策与分数等级，完整内容在各自的体系页。',
+  'exams.internalNote':
+    '本节只做索引，不复制事实内容——每一条都链接到体系页的对应段落，保证同一份权威说明全站只有一个版本。',
+  'exams.internalGoAssessment': '评核方式',
+  'exams.internalGoPolicy': '官方政策',
+  'exams.internalGoScale': '分数与等级',
+  'exams.externalTitle': '独立考试',
+  'exams.externalLede':
+    'SAT 与 ACT 是大学入学标准化考试；IELTS 与 TOEFL 是语言能力测试。两者都不是课程体系，也不产生学历资格。',
+  'exams.identityTitle': '三类评估，作用完全不同',
+  'exams.identityDesc': '把它们分开，是理解整个考试体系的前提。',
+  'exams.prepTitle': '备考指南',
+  'exams.prepLede':
+    '按体系与科目整理的备考方法、时间轴与常见难点。每条内容都标注它的依据类型。',
+  'exams.prepCta': '查看全部备考内容',
+  'exams.prepEmpty': '备考内容正在整理中。',
+  'exams.roleQualification': '产生学历资格',
+  'exams.roleQualificationNote':
+    '课程体系自带的评估，通过后取得证书或文凭，同时决定能否毕业。',
+  'exams.roleAdmission': '用于录取评估',
+  'exams.roleAdmissionNote':
+    '不产生学历，只为院校提供统一的学术能力参照。是否要求由院校政策决定。',
+  'exams.roleLanguage': '证明语言能力',
+  'exams.roleLanguageNote':
+    '不评估学科知识，只证明在英语环境中学习与生活的能力。部分院校可豁免。',
+
+  // Exam preparation (section 02.4) ---------------------------------------
+  'prep.title': '备考指南',
+  'prep.lede': '回答「怎么准备」：按体系与科目整理的方法、时间轴与常见难点。',
+  'prep.all': '全部',
+  'prep.filterSystem': '按体系筛选',
+  'prep.filterSubject': '按科目筛选',
+  'prep.stage': '适用阶段',
+  'prep.evidence': '依据类型',
+  'prep.references': '参考来源',
+  'prep.empty': '该分类下暂无内容。',
+  'prep.noticeTitle': '关于本栏目内容的依据',
+  'prep.noticeBody':
+    '备考内容包含不同类型的信息，因此每篇都会标注它的依据：官方文件、公开试卷结构分析，或编辑团队的判断。我们不承诺分数提升，也不做录取保证。',
+  'prep.bySystemAndSubject': '体系 / 科目',
+  'prep.comingTitle': '接下来会补上的',
+  'prep.comingBody':
+    '备考内容会按体系逐步展开（先做 DSE 与 A-Level），每个体系下再按科目细分。第一批内容正在整理。',
+  'prep.readArticle': '阅读',
+
+  // Evidence classification -------------------------------------------------
+  'evidence.official': '官方依据',
+  'evidence.officialNote': '依据考试局或政府部门公开发布的文件。',
+  'evidence.structural': '结构分析',
+  'evidence.structuralNote': '依据公开的试卷结构与历年试题形式整理。',
+  'evidence.editorial': '编辑观点',
+  'evidence.editorialNote': '编辑团队的经验性建议，非官方立场，请结合自身情况判断。',
+  'evidence.label': '依据',
+
   // Accessibility ----------------------------------------------------------
   'a11y.skip': '跳到主要内容',
   'a11y.decorative': '装饰性图形',
@@ -511,7 +581,8 @@ const en: Record<UIKey, string> = {
   // Navigation -------------------------------------------------------------
   'nav.explore': 'Explore',
   'nav.systems': 'Systems',
-  'nav.exams': 'Exams',
+  'nav.exams': 'Exams & prep',
+  'nav.prep': 'Exam prep',
   'nav.pathways': 'Pathways',
   'nav.guides': 'Guides',
   'nav.resources': 'Resources',
@@ -677,9 +748,9 @@ const en: Record<UIKey, string> = {
   'systems.notFound': 'This education system could not be found',
 
   // Exams ------------------------------------------------------------------
-  'exams.title': 'Examinations & assessment',
+  'exams.title': 'Exams & preparation',
   'exams.lede':
-    'An examination is not a curriculum. It is an assessment instrument — used to measure what a student has learned, or to inform university admission.',
+    'Examinations come in two kinds: the assessment built into a curriculum, which determines whether you gain a qualification, and instruments that sit outside every curriculum and are added because of a destination or a language requirement. This section puts both in one place — first what you have to sit, then how to prepare.',
   'exams.note':
     'SAT and ACT are university admissions tests; IELTS and TOEFL are language proficiency tests. Neither is a curriculum path, and neither produces a diploma or leaving qualification.',
   'exams.familyStandardised': 'University admissions tests',
@@ -879,7 +950,9 @@ const en: Record<UIKey, string> = {
     'Each international curriculum explained: structure, assessment and where it leads.',
   'sectionNote.compare': 'Place 2–4 systems side by side across the same dimensions.',
   'sectionNote.examsOverview':
-    'Admissions tests separated from language tests, and how they relate to curricula.',
+    'From "what do I have to sit" to "how do I prepare" — curriculum assessment and external instruments together.',
+  'sectionNote.prep':
+    'Preparation methods, timelines and common pitfalls, organised by system and subject.',
   'sectionNote.pathways':
     'Route relationships between education systems and destinations worldwide.',
   'sectionNote.mainland':
@@ -999,6 +1072,75 @@ const en: Record<UIKey, string> = {
   'integrity.title': 'Content integrity report',
   'integrity.lede':
     'A build-time provenance check, so that no unsourced time-sensitive claim can be published.',
+
+  // Examinations hub (section 02) -----------------------------------------
+  'exams.comboTitle': 'Which exams do I have to sit',
+  'exams.comboLede':
+    'On the left, the assessment built into the curriculum — unavoidable. On the right, instruments added because of a destination or a language requirement — conditional by definition.',
+  'exams.comboNote':
+    'This table describes structure, not institutional policy. Whether a test is required, and whether it can be waived, is decided by each institution.',
+  'exams.comboInternal': 'Curriculum assessment',
+  'exams.comboOutcome': 'Produces',
+  'exams.comboExtra': 'Commonly added',
+  'exams.comboConditional': 'Conditional',
+  'exams.comboNone': 'Usually none',
+  'exams.internalTitle': 'Assessment inside the curriculum',
+  'exams.internalLede':
+    'The exam structure, official policy and reporting scale for DSE, A-Level, IGCSE, IB and AP live in full on their own system pages.',
+  'exams.internalNote':
+    'This section indexes rather than duplicates: every entry links to the corresponding passage on the system page, so each authoritative statement exists in exactly one place.',
+  'exams.internalGoAssessment': 'Assessment',
+  'exams.internalGoPolicy': 'Official policy',
+  'exams.internalGoScale': 'Scores & grades',
+  'exams.externalTitle': 'Examinations outside the curriculum',
+  'exams.externalLede':
+    'SAT and ACT are university admissions tests; IELTS and TOEFL are language proficiency tests. Neither is a curriculum, and neither produces a qualification.',
+  'exams.identityTitle': 'Three kinds of assessment, three different jobs',
+  'exams.identityDesc': 'Keeping them apart is the precondition for understanding any of it.',
+  'exams.prepTitle': 'Exam preparation',
+  'exams.prepLede':
+    'Preparation methods, timelines and common pitfalls by system and subject. Every piece declares the kind of evidence behind it.',
+  'exams.prepCta': 'See all preparation content',
+  'exams.prepEmpty': 'Preparation content is being compiled.',
+  'exams.roleQualification': 'Produces a qualification',
+  'exams.roleQualificationNote':
+    'The assessment built into a curriculum: passing it awards a certificate or diploma and determines graduation.',
+  'exams.roleAdmission': 'Used in admissions evaluation',
+  'exams.roleAdmissionNote':
+    'Awards no qualification; it gives institutions a common academic reference. Whether it is required is institutional policy.',
+  'exams.roleLanguage': 'Evidences language ability',
+  'exams.roleLanguageNote':
+    'Does not assess subject knowledge — only the ability to study and live in an English-speaking environment. Some institutions waive it.',
+
+  // Exam preparation (section 02.4) ---------------------------------------
+  'prep.title': 'Exam preparation',
+  'prep.lede':
+    'Answering "how do I prepare": methods, timelines and common pitfalls by system and subject.',
+  'prep.all': 'All',
+  'prep.filterSystem': 'Filter by system',
+  'prep.filterSubject': 'Filter by subject',
+  'prep.stage': 'Stage',
+  'prep.evidence': 'Evidence',
+  'prep.references': 'References',
+  'prep.empty': 'Nothing in this category yet.',
+  'prep.noticeTitle': 'What backs the content here',
+  'prep.noticeBody':
+    'Preparation content mixes different kinds of information, so every piece declares its basis: an official document, an analysis of published paper structures, or the editors\u2019 own judgement. We make no promise of score improvement and no guarantee of admission.',
+  'prep.bySystemAndSubject': 'System / subject',
+  'prep.comingTitle': 'Still to come',
+  'prep.comingBody':
+    'Coverage expands system by system (starting with DSE and A-Level), then subject by subject within each. The first batch is in progress.',
+  'prep.readArticle': 'Read',
+
+  // Evidence classification -------------------------------------------------
+  'evidence.official': 'Official',
+  'evidence.officialNote': 'Based on documents published by the awarding body or a government authority.',
+  'evidence.structural': 'Structural',
+  'evidence.structuralNote': 'Compiled from published paper structures and the form of past papers.',
+  'evidence.editorial': 'Editorial',
+  'evidence.editorialNote':
+    'Practical advice from the editorial team — not an official position. Judge it against your own situation.',
+  'evidence.label': 'Evidence',
 
   // Accessibility ----------------------------------------------------------
   'a11y.skip': 'Skip to main content',

@@ -28,7 +28,7 @@ const t = useTranslations(locale);
 const section = sections.find((item) => item.id === 'admissions');
 const modules = (section?.children ?? []).filter((child) => child.href !== routes.admissions);
 
-const integrity = buildIntegrityReport();
+const integrity = await buildIntegrityReport();
 
 /** The two tracks the section is built around. */
 const tracks: { id: string; titleKey: UIKey; noteKey: UIKey; href: string; systems: string[] }[] = [

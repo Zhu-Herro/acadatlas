@@ -18,8 +18,8 @@
 import type { APIRoute } from 'astro';
 import { assertIntegrity } from '@/lib/integrity';
 
-export const GET: APIRoute = () => {
-  const report = assertIntegrity();
+export const GET: APIRoute = async () => {
+  const report = await assertIntegrity();
 
   return new Response(JSON.stringify(report, null, 2), {
     headers: {

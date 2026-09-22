@@ -27,7 +27,7 @@ const { locale } = Astro.props;
 const t = useTranslations(locale);
 
 /** The build-time guard result — surfaced to the reader as a trust signal. */
-const integrity = buildIntegrityReport();
+const integrity = await buildIntegrityReport();
 
 /** Resolve each row's source once; drop rows whose source cannot be resolved. */
 const rows = requirements

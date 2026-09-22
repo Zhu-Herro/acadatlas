@@ -19,10 +19,13 @@
  * Run automatically at build time by `src/pages/integrity.json.ts`.
  */
 
+import { getCollection } from 'astro:content';
 import { chinaRoutes } from '@/data/chinaRoutes';
+import { examCombinations } from '@/data/examCombinations';
 import { policyEntries } from '@/data/policies';
 import { requirements } from '@/data/requirements';
 import { gradeScales } from '@/data/scales';
+import { routes } from '@/data/routes';
 import { resolveSource, type RawSource } from '@/lib/sources';
 
 export interface IntegrityIssue {
@@ -53,8 +56,26 @@ function checkSource(where: string, source: RawSource | undefined, issues: Integ
   }
 }
 
-export function runIntegrityCheck(): IntegrityIssue[] {
+/** Route segments under `/exams/` that are reserved by the section layout. */
+const RESERVED_EXAM_SEGMENTS = ['prep'];
+
+export async function runIntegrityCheck(): Promise<IntegrityIssue[]> {
   const issues: IntegrityIssue[] = [];
+
+  /* ── Reserved route collisions ─────────────────────────────────────── */
+  // `/exams/prep` is a real page. An exam whose slug is `prep` would silently
+  // shadow it, so the build refuses rather than shipping an ambiguous URL.
+  const examEntries = await getCollection('exams');
+  for (const entry of examEntries) {
+    const slug = entry.id.split('/').slice(1).join('/');
+    if (RESERVED_EXAM_SEGMENTS.includes(slug)) {
+      issues.push({
+        level: 'error',
+        where: `exams/${entry.id}`,
+        message: `Slug "${slug}" collides with the reserved route ${routes.prep}.`,
+      });
+    }
+  }
 
   /* ── Requirements: the highest-stakes data on the platform ─────────── */
   const seenIds = new Set<string>();
@@ -149,6 +170,81 @@ export function runIntegrityCheck(): IntegrityIssue[] {
     }
   }
 
+  /* ── Exam combinations ─────────────────────────────────────────────── */
+  for (const combination of examCombinations) {
+    const where = `examCombinations/${combination.system}`;
+
+    if (combination.sources.length === 0) {
+      issues.push({
+        level: 'error',
+        where,
+        message: 'A combination row must cite the sources behind its structural claims.',
+      });
+    }
+
+    for (const [index, source] of combination.sources.entries()) {
+      checkSource(`${where}#source${index + 1}`, source, issues);
+    }
+
+    if (!combination.academicYear) {
+      issues.push({ level: 'error', where, message: 'Missing academicYear.' });
+    }
+  }
+
+  /* ── Prep content: the editorial guardrail ─────────────────────────── */
+  const prepEntries = await getCollection('prep');
+
+  for (const entry of prepEntries) {
+    const where = `prep/${entry.id}`;
+    const data = entry.data;
+
+    // 1. Practical advice must declare what it is based on.
+    if (!data.evidenceType) {
+      issues.push({
+        level: 'error',
+        where,
+        message: 'Preparation content must declare an evidenceType.',
+      });
+    }
+
+    // 2. Official and structural claims must be traceable.
+    if (data.evidenceType !== 'editorial' && data.sources.length === 0) {
+      issues.push({
+        level: 'error',
+        where,
+        message: `evidenceType "${data.evidenceType}" requires at least one source. Use evidenceType "editorial" instead if the content is editorial judgement.`,
+      });
+    }
+
+    // 3. Paid content may never masquerade as official.
+    if (data.sponsored && data.evidenceType === 'official') {
+      issues.push({
+        level: 'error',
+        where,
+        message:
+          'Sponsored preparation content cannot claim evidenceType "official" — a paid piece must not read as an official position.',
+      });
+    }
+
+    // 4. A partnership must be named, otherwise the disclosure means nothing.
+    if (data.sponsored && !data.sponsorName) {
+      issues.push({
+        level: 'error',
+        where,
+        message: 'Sponsored content must name the partner (sponsorName).',
+      });
+    }
+
+    // 5. Time-sensitive practice advice needs a year stamp.
+    if (!data.academicYear) {
+      issues.push({ level: 'error', where, message: 'Missing academicYear.' });
+    }
+
+    for (const [index, source] of data.sources.entries()) {
+      checkSource(`${where}#source${index + 1}`, source, issues);
+    }
+  }
+
   return issues;
 }
 
@@ -162,12 +258,13 @@ export interface IntegrityReport {
     gradeScales: number;
     policyEntries: number;
     chinaRoutes: number;
+    prepEntries: number;
   };
   issues: IntegrityIssue[];
 }
 
-export function buildIntegrityReport(): IntegrityReport {
-  const issues = runIntegrityCheck();
+export async function buildIntegrityReport(): Promise<IntegrityReport> {
+  const issues = await runIntegrityCheck();
   const errors = issues.filter((issue) => issue.level === 'error');
 
   return {
@@ -180,6 +277,7 @@ export function buildIntegrityReport(): IntegrityReport {
       gradeScales: gradeScales.length,
       policyEntries: policyEntries.length,
       chinaRoutes: chinaRoutes.length,
+      prepEntries: (await getCollection('prep')).length,
     },
     issues,
   };
@@ -189,8 +287,8 @@ export function buildIntegrityReport(): IntegrityReport {
  * Throws if any hard integrity rule is violated. Called by the build-time
  * report endpoint so a fabricated or unsourced claim can never ship.
  */
-export function assertIntegrity(): IntegrityReport {
-  const report = buildIntegrityReport();
+export async function assertIntegrity(): Promise<IntegrityReport> {
+  const report = await buildIntegrityReport();
 
   if (!report.ok) {
     const details = report.issues

@@ -1,0 +1,238 @@
+---
+/**
+ * /exams/prep — 备考指南 (section 02.4).
+ *
+ * The preparation sub-tree. It exists as its own path rather than as another
+ * anchored block because it is the part of section 02 that will grow: system by
+ * system, then subject by subject, then possibly paper by paper. Giving it a
+ * sub-tree now means that growth never forces another restructure.
+ *
+ * Two things this page does that a normal listing would not:
+ *   1. It states the evidence policy up front, before any content is shown.
+ *   2. It shows the coverage plan honestly — what exists and what does not —
+ *      instead of pretending the section is complete.
+ */
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import ArticleCard from '@/components/ArticleCard.astro';
+import { routes } from '@/data/routes';
+import { entrySlug, inLocale, sortEntries } from '@/lib/content';
+import { localizePath, useTranslations, type Locale } from '@/i18n/utils';
+import { breadcrumbSchema, buildSeo } from '@/lib/seo';
+import type { UIKey } from '@/i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const entries = sortEntries(inLocale(await getCollection('prep'), locale));
+const allSystems = sortEntries(inLocale(await getCollection('systems'), locale));
+
+const systemLabel = (slug: string) =>
+  allSystems.find((entry) => entrySlug(entry) === slug)?.data.shortName ??
+  (slug === 'any' ? t('prep.all') : slug.toUpperCase());
+
+/** Only render a filter for systems that actually have content. */
+const activeSystems = allSystems
+  .map((entry) => entrySlug(entry))
+  .filter((slug) => entries.some((entry) => entry.data.system === slug));
+
+const seo = buildSeo({
+  title: t('prep.title'),
+  description: t('prep.lede'),
+  locale,
+  path: routes.prep,
+  jsonLd: [
+    breadcrumbSchema(
+      [
+        { name: t('common.home'), path: routes.home },
+        { name: t('exams.title'), path: routes.exams },
+        { name: t('prep.title'), path: routes.prep },
+      ],
+      locale,
+    ),
+  ],
+});
+---
+
+<BaseLayout locale={locale} seo={seo}>
+  <PageHeader
+    locale={locale}
+    number="02.4"
+    eyebrow={t('nav.exams')}
+    title={[t('prep.title')]}
+    lede={t('prep.lede')}
+    crumbs={[
+      { name: t('common.home'), path: routes.home },
+      { name: t('exams.title'), path: routes.exams },
+      { name: t('prep.title'), path: routes.prep },
+    ]}
+  />
+
+  <!-- ── Evidence policy, stated before the content ─────────────────── -->
+  <section class="edge-rule" aria-labelledby="prep-notice">
+    <div class="u-container py-12">
+      <div class="grid gap-8 lg:grid-cols-12 lg:gap-x-16">
+        <div class="lg:col-span-4">
+          <h2 id="prep-notice" data-reveal="fade" class="eyebrow eyebrow-accent">
+            {t('prep.noticeTitle')}
+          </h2>
+        </div>
+        <div class="lg:col-span-8 flex flex-col gap-4">
+          <p data-reveal="up" class="max-w-2xl text-body leading-relaxed text-charcoal">
+            {t('prep.noticeBody')}
+          </p>
+          <ul class="mt-2 flex flex-wrap gap-x-7 gap-y-3">
+            {
+              (['official', 'structural', 'editorial'] as const).map((type) => (
+                <li class="flex items-baseline gap-3">
+                  <span class="font-mono text-micro uppercase tracking-[0.14em] text-accent">
+                    {t(`evidence.${type}` as UIKey)}
+                  </span>
+                  <span class="max-w-xs text-caption leading-snug text-mist">
+                    {t(`evidence.${type}Note` as UIKey)}
+                  </span>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Filters (progressive enhancement only) ─────────────────────── -->
+  {
+    entries.length > 1 && activeSystems.length > 1 && (
+      <section class="edge-rule" aria-label={t('prep.filterSystem')}>
+        <div class="u-container py-8">
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
+            <span class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+              {t('prep.filterSystem')}
+            </span>
+            <button type="button" data-prep-filter="all" aria-pressed="true" class="prep-chip">
+              {t('prep.all')}
+            </button>
+            {activeSystems.map((slug) => (
+              <button type="button" data-prep-filter={slug} aria-pressed="false" class="prep-chip">
+                {systemLabel(slug)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- ── Content ────────────────────────────────────────────────────── -->
+  <section class="edge-rule" aria-labelledby="prep-list">
+    <div class="u-container u-section">
+      {
+        entries.length > 0 ? (
+          <>
+            <h2 id="prep-list" data-reveal="fade" class="eyebrow eyebrow-accent">
+              {t('prep.title')}
+            </h2>
+
+            <div class="mt-14 grid gap-x-12 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+              {entries.map((entry) => (
+                <div data-prep-row data-system={entry.data.system}>
+                  <ArticleCard
+                    title={entry.data.title}
+                    summary={entry.data.summary}
+                    href={localizePath(routes.prepArticle(entrySlug(entry)), locale)}
+                    category={`${systemLabel(entry.data.system)}${entry.data.subject ? ` · ${entry.data.subject}` : ''}`}
+                    readingMinutes={entry.data.readingMinutes}
+                    updatedAt={entry.data.updatedAt}
+                    systems={[t(`evidence.${entry.data.evidenceType}` as UIKey)]}
+                    locale={locale}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <p data-prep-empty hidden class="border-t border-dashed border-rule pt-8 text-caption text-graphite">
+              {t('prep.empty')}
+            </p>
+          </>
+        ) : (
+          <div class="border-t border-dashed border-rule pt-10">
+            <h2 id="prep-list" class="font-display text-h3 text-ink">
+              {t('prep.comingTitle')}
+            </h2>
+            <p class="mt-5 max-w-2xl text-body leading-relaxed text-graphite">
+              {t('prep.comingBody')}
+            </p>
+            <p class="mt-10 flex flex-wrap items-baseline gap-x-8 gap-y-3">
+              <a
+                href={localizePath(routes.exams, locale)}
+                class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
+              >
+                {t('exams.title')} →
+              </a>
+              <a
+                href={localizePath(routes.systems, locale)}
+                class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
+              >
+                {t('systems.title')} →
+              </a>
+            </p>
+          </div>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .prep-chip {
+    border: 1px solid var(--color-rule);
+    padding: 0.5rem 0.85rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-graphite);
+    transition: border-color 0.3s var(--ease-editorial), color 0.3s var(--ease-editorial);
+  }
+
+  .prep-chip:hover {
+    border-color: var(--color-ink);
+    color: var(--color-ink);
+  }
+
+  .prep-chip[aria-pressed='true'] {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+</style>
+
+<script>
+  const prepChips = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-prep-filter]'));
+  const prepRows = Array.from(document.querySelectorAll<HTMLElement>('[data-prep-row]'));
+  const prepEmpty = document.querySelector<HTMLElement>('[data-prep-empty]');
+
+  function applyPrepFilter(system: string): void {
+    let visible = 0;
+
+    for (const row of prepRows) {
+      const show = system === 'all' || row.dataset.system === system;
+      row.hidden = !show;
+      if (show) visible += 1;
+    }
+
+    for (const chip of prepChips) {
+      chip.setAttribute('aria-pressed', String(chip.dataset.prepFilter === system));
+    }
+
+    if (prepEmpty) prepEmpty.hidden = visible > 0;
+  }
+
+  for (const chip of prepChips) {
+    chip.addEventListener('click', () => applyPrepFilter(chip.dataset.prepFilter ?? 'all'));
+  }
+</script>

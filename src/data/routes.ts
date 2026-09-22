@@ -33,9 +33,14 @@ export const routes = {
   system: (slug: string) => `/systems/${slug}`,
   compare: '/compare',
 
-  /* 02 — Examinations */
+  /* 02 — Examinations & preparation */
   exams: '/exams',
   exam: (slug: string) => `/exams/${slug}`,
+  /** 02.4 — the preparation sub-tree. Everything else in section 02 lives on
+   *  the hub page as anchored sub-sections, so the reader sees the whole
+   *  "what do I have to sit" picture in one scroll. */
+  prep: '/exams/prep',
+  prepArticle: (slug: string) => `/exams/prep/${slug}`,
 
   /* 03 — Admissions (one section, four modules) */
   admissions: '/admissions',
@@ -101,7 +106,16 @@ export const sections: Section[] = [
     key: 'nav.exams',
     href: routes.exams,
     children: [
-      { key: 'nav.exams', href: routes.exams, noteKey: 'sectionNote.examsOverview' },
+      {
+        key: 'nav.exams',
+        href: routes.exams,
+        noteKey: 'sectionNote.examsOverview',
+      },
+      {
+        key: 'nav.prep',
+        href: routes.prep,
+        noteKey: 'sectionNote.prep',
+      },
     ],
   },
   {

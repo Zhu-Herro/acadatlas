@@ -224,4 +224,64 @@ const guides = defineCollection({
   }),
 });
 
-export const collections = { systems, exams, guides };
+/**
+ * ── prep ──────────────────────────────────────────────────────────────────
+ * Exam preparation content (section 02.4).
+ *
+ * This collection exists to solve a specific editorial problem. Preparation
+ * material is mostly PRACTICAL — study order, timeline, common pitfalls — and
+ * much of it cannot be sourced to an official document the way a syllabus
+ * statement can. Without a way to be explicit about that, a platform built on
+ * "nothing unsourced" would either have to refuse to publish guidance, or
+ * quietly break its own rule.
+ *
+ * So every entry must declare `evidenceType`:
+ *
+ *   official   — the claim is traceable to an awarding body / government doc
+ *   structural — derived from published paper structures and past-paper form
+ *   editorial  — the editors' own judgement, labelled as such on the page
+ *
+ * Combined with `sponsored`, this lets the platform earn revenue from this
+ * section later without ever passing paid advice off as official fact:
+ * integrity.ts refuses to build a sponsored piece that claims `official`.
+ */
+const prep = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/prep' }),
+  schema: z.object({
+    title: z.string(),
+    /** Opening paragraph. */
+    lede: z.string(),
+    /** Card / listing description. */
+    summary: z.string(),
+
+    /** Curriculum this preparation is for, or `any`. */
+    system: z.string(),
+    /** Subject or component. Omitted for whole-system overviews. */
+    subject: z.string().optional(),
+    /** Where in the pathway this applies. */
+    stage: z.enum(['overview', 'core', 'final-year', 'language', 'post-results']),
+
+    /** MANDATORY. See the block comment above. */
+    evidenceType: z.enum(['official', 'structural', 'editorial']),
+
+    publishedAt: z.coerce.date(),
+    updatedAt: z.coerce.date(),
+    readingMinutes: z.number().min(1),
+
+    heroVariant: z.enum(['network', 'chain', 'grid', 'orbit']).default('grid'),
+
+    /** Paid-partnership disclosure. Must name the partner when true. */
+    sponsored: z.boolean().default(false),
+    sponsorName: z.string().optional(),
+
+    tags: z.array(z.string()).default([]),
+    related: z.array(z.string()).default([]),
+    sources: z.array(sourceSchema).default([]),
+    academicYear: z.string(),
+
+    featured: z.boolean().default(false),
+    order: z.number().default(99),
+  }),
+});
+
+export const collections = { systems, exams, guides, prep };

@@ -82,13 +82,16 @@ EducationWeb/
 
 ## 3. 已完成页面
 
-默认语言（中文，无前缀）与英文（`/en/` 前缀）**双份**，共 **60 个静态页面**。
+默认语言（中文，无前缀）与英文（`/en/` 前缀）**双份**，共 **64 个静态页面**。
 
 **信息架构（5 个大板块 + 二级模块）** —— 定义在 `src/data/routes.ts`，导航、首页叙事、面包屑、搜索索引全部由它派生：
 
 ```
 01 教育体系  /systems          → 体系详情 · 体系比较 /compare
-02 考试      /exams            → 入学标准化考试 · 语言测试
+02 考试与备考 /exams           → 02.1 我该考哪些试   （体系 × 必考/加考对照）
+                                 02.2 体系内评估     （DSE/A-Level/IGCSE/IB/AP，索引到体系页）
+                                 02.3 独立考试       （SAT / ACT / IELTS / TOEFL 详情页）
+                                 02.4 备考指南       /exams/prep  ← 可扩张子树
 03 升学      /admissions       → 03.1 升学路径   /admissions/pathways
                                  03.2 内地升学   /admissions/mainland
                                  03.3 境外升学   /admissions/overseas
@@ -104,8 +107,10 @@ EducationWeb/
 | `/` · `/en/` | 首页：Hero → 引言（含五板块目录）→ 01 教育体系 → 02 考试 → 03 升学（两条主线 + 四个模块 + 路径图）→ 04 教育指南 → 05 资源中心 → 搜索 → 结语 |
 | `/systems` · `/en/systems` | 体系总览 + 四类信息架构说明 |
 | `/systems/dse` `/ib` `/ap` `/a-level` `/igcse` | 体系详情（统一 01–09 模板 + 关联体系） |
-| `/exams` · `/en/exams` | 考试体系（按「入学标准化考试 / 语言测试」分组） |
+| `/exams` · `/en/exams` | **考试与备考枢纽**：02.1 我该考哪些试（体系×必考/加考对照表）· 02.2 体系内评估索引 · 02.3 独立考试 · 02.4 备考入口 · 三类评估作用对照 |
 | `/exams/sat` `/act` `/ielts` `/toefl` | 考试详情（复用同一模板，01–08） |
+| `/exams/prep` · `/en/exams/prep` | **备考指南枢纽**：按体系筛选、依据类型说明、覆盖计划 |
+| `/exams/prep/{slug}` | 备考文章（正文前固定显示「依据类型」与商业合作披露） |
 | `/admissions` · `/en/admissions` | **升学板块总览**：两条主线（内地／境外）+ 四个模块 + 分数处理原则 + 路线图 |
 | `/admissions/pathways` | 升学路径：体系↔目的地路径关系图 + 7 个目的地 |
 | `/admissions/mainland` | **中国内地升学**：两条官方渠道 + 关键标准 + 官方时间线 + 一手出处 |
@@ -390,6 +395,7 @@ netlify deploy --build --prod
 | `src/data/scales.ts` | 全部评分与等级体系（DSE 1–5\*\*、IB 45 分制、A-Level A\*–E、IGCSE、AP 1–5、SAT、ACT、IELTS、TOEFL） | 9 条 |
 | `src/data/requirements.ts` | 院校 / 官方录取要求，**每条必须带出处、适用学年与核验状态** | 13 条（已核验 10 · 待核验 3） |
 | `src/data/chinaRoutes.ts` | 中国内地两条官方升学渠道（教育部文凭试收生计划、全国联招）及其官方时间线与核对入口 | 2 条 |
+| `src/data/examCombinations.ts` | 「我该考哪些试」：每个体系自带的评估 + 常见加考及其原因 | 5 条 |
 | `src/site.config.ts` → `officialBodies` | 全部官方机构与公告的登记表（一处修改、全站生效） | 19 个 |
 
 ### 两个状态，一个守门人
@@ -418,6 +424,49 @@ netlify deploy --build --prod
 | HKEAA 官方页 | 甲 / 乙 / 丙类科目分类、2027 年文凭试报名与特殊报考窗口、考试费公布安排 |
 | Cambridge International 官方页 | AS 可延伸至完整 A Level、数十门科目可自由组合 |
 | 上海财经大学招生简章 | 院校附加要求高于全国最低标准的实例（要求总分不低于 11 分） |
+
+### 备考栏目（02.4）的三条护栏
+
+备考内容天然混有「官方事实」与「经验判断」。若不区分，一个以「不编造」为原则的平台要么写不出备考建议，要么会悄悄破坏自己的规则。因此：
+
+**护栏 1｜每条内容必须声明依据类型**（`evidenceType`，schema 必填）
+
+| 类型 | 含义 |
+| --- | --- |
+| `official` | 可追溯到考试局或政府公开文件 |
+| `structural` | 依据公开试卷结构与历年试题形式整理 |
+| `editorial` | 编辑判断，页面上明确标注 |
+
+构建期强制（`src/lib/integrity.ts`）：
+- `official` / `structural` **必须至少有一个来源**，否则构建失败
+- 页面在正文之前**固定显示依据类型**（`EvidenceNote` 组件），不可关闭
+
+**护栏 2｜广告不得伪装成官方口径**
+- `sponsored: true` 时 **禁止** `evidenceType: 'official'`（付费内容不得读起来像官方立场）
+- `sponsored: true` 必须提供 `sponsorName`，否则构建失败
+- 合作披露固定渲染在正文之前
+
+**护栏 3｜历年真题只链接、不托管**
+- 官方考纲、试卷结构说明、评卷参考、考生表现统计 → 可引用并注明出处
+- **历年试卷（past papers）版权属考试局，不得自行扫描上传**；只能链接到官方免费发布处
+
+### 扩充备考内容（不需要写代码）
+
+在 `src/content/prep/{zh,en}/` 新增 Markdown 即可，`/exams/prep` 与 02.4 会自动收录：
+
+```yaml
+---
+title: 'A-Level 物理备考'
+system: 'a-level'
+subject: '物理'
+stage: 'core'                # overview | core | final-year | language | post-results
+evidenceType: 'structural'   # official | structural | editorial
+sources:                     # official / structural 时必须非空
+  - body: 'cambridge'
+academicYear: '2026/27'
+sponsored: false             # 为 true 时必须写 sponsorName，且不能是 official
+---
+```
 
 ### 扩充一条要求（不需要写代码）
 

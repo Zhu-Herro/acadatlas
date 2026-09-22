@@ -27,10 +27,11 @@ interface SearchRecord {
 }
 
 export const GET: APIRoute = async () => {
-  const [systems, exams, guides] = await Promise.all([
+  const [systems, exams, guides, prep] = await Promise.all([
     getCollection('systems'),
     getCollection('exams'),
     getCollection('guides'),
+    getCollection('prep'),
   ]);
 
   const records: SearchRecord[] = [];
@@ -79,6 +80,25 @@ export const GET: APIRoute = async () => {
           ...entry.data.tags,
           ...entry.data.systems,
         ],
+      });
+    }
+
+    // Exam preparation (section 02.4). Indexed with its evidence type in the
+    // keyword set so "编辑观点" / "editorial" searches surface the right pieces.
+    for (const entry of prep.filter((item) => isLocaleEntry(item.id))) {
+      records.push({
+        title: entry.data.title,
+        description: entry.data.summary,
+        href: localizePath(`/exams/prep/${entrySlug(entry)}`, locale),
+        kind: 'guide',
+        lang: locale,
+        keywords: [
+          t('prep.title'),
+          entry.data.system,
+          entry.data.subject ?? '',
+          t(`evidence.${entry.data.evidenceType}` as never),
+          ...entry.data.tags,
+        ].filter(Boolean),
       });
     }
 

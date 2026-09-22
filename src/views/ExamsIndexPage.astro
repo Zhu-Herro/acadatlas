@@ -1,17 +1,35 @@
 ---
 /**
- * /exams — qualification & examination overview.
+ * /exams — the examinations & preparation hub (section 02).
  *
- * Rendered from the `exams` collection, split by family so that
- * university admissions tests and language proficiency tests are never
- * presented as if they were interchangeable.
+ * This page exists because the previous version of the section could not answer
+ * the question readers actually arrive with: "which exams do I have to sit?"
+ * Exams were split between curriculum pages (DSE, A-Level, IGCSE, IB, AP) and
+ * this page (SAT, ACT, IELTS, TOEFL), so nobody could see the full set, and the
+ * section read as an unexplained list of four unfamiliar names.
+ *
+ * The fix is to make the two kinds explicit and put them side by side:
+ *
+ *   02.1  Which exams do I have to sit  — one row per curriculum, showing what
+ *         the curriculum itself requires and what is commonly added on top.
+ *   02.2  Assessment inside a curriculum — an INDEX into the system pages.
+ *         Nothing is duplicated: each authoritative statement has one home.
+ *   02.3  Assessment outside a curriculum — the four instrument detail pages.
+ *   02.4  Preparation — the sub-tree at /exams/prep.
+ *
+ * Anchored sub-sections rather than four separate pages: the reader gets the
+ * whole picture in one scroll, and the section stays one coherent thing.
  */
 import { getCollection } from 'astro:content';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHeader from '@/components/PageHeader.astro';
+import ArticleCard from '@/components/ArticleCard.astro';
+import { routes } from '@/data/routes';
+import { examCombinations, externalReasonLabels } from '@/data/examCombinations';
 import { entrySlug, inLocale, sortEntries } from '@/lib/content';
 import { localizePath, useTranslations, type Locale } from '@/i18n/utils';
 import { breadcrumbSchema, buildSeo } from '@/lib/seo';
+import type { UIKey } from '@/i18n/ui';
 
 interface Props {
   locale: Locale;
@@ -20,7 +38,13 @@ interface Props {
 const { locale } = Astro.props;
 const t = useTranslations(locale);
 
+const allSystems = await getCollection('systems');
+const systems = sortEntries(inLocale(allSystems, locale));
 const exams = sortEntries(inLocale(await getCollection('exams'), locale));
+const prepEntries = sortEntries(inLocale(await getCollection('prep'), locale));
+
+const systemBySlug = new Map(systems.map((entry) => [entrySlug(entry), entry]));
+const examBySlug = new Map(exams.map((entry) => [entrySlug(entry), entry]));
 
 const families = [
   {
@@ -35,16 +59,26 @@ const families = [
   },
 ].filter((family) => family.entries.length > 0);
 
+/** The three roles an assessment can play. Kept as data so it stays editable. */
+const roles: { key: UIKey; noteKey: UIKey; example: string }[] = [
+  { key: 'exams.roleQualification', noteKey: 'exams.roleQualificationNote', example: 'DSE · A-Level · IGCSE · IB' },
+  { key: 'exams.roleAdmission', noteKey: 'exams.roleAdmissionNote', example: 'SAT · ACT' },
+  { key: 'exams.roleLanguage', noteKey: 'exams.roleLanguageNote', example: 'IELTS · TOEFL' },
+];
+
+const prepPreview = prepEntries.filter((entry) => entry.data.featured).slice(0, 3);
+const shownPrep = prepPreview.length > 0 ? prepPreview : prepEntries.slice(0, 3);
+
 const seo = buildSeo({
   title: t('exams.title'),
   description: t('exams.lede'),
   locale,
-  path: '/exams',
+  path: routes.exams,
   jsonLd: [
     breadcrumbSchema(
       [
-        { name: t('common.home'), path: '/' },
-        { name: t('exams.title'), path: '/exams' },
+        { name: t('common.home'), path: routes.home },
+        { name: t('exams.title'), path: routes.exams },
       ],
       locale,
     ),
@@ -56,96 +90,371 @@ const seo = buildSeo({
   <PageHeader
     locale={locale}
     number="02"
-    eyebrow={t('exams.title')}
+    eyebrow={t('nav.exams')}
     title={[t('exams.title')]}
     lede={t('exams.lede')}
     crumbs={[
-      { name: t('common.home'), path: '/' },
-      { name: t('exams.title'), path: '/exams' },
+      { name: t('common.home'), path: routes.home },
+      { name: t('exams.title'), path: routes.exams },
     ]}
-  />
-
-  <section class="edge-rule">
-    <div class="u-container py-12">
-      <p
-        data-reveal="fade"
-        class="max-w-3xl border-l border-accent pl-5 text-caption leading-relaxed text-graphite"
-      >
-        {t('exams.note')}
-      </p>
-    </div>
-  </section>
-
-  {
-    families.map((family, familyIndex) => (
-      <section class="edge-rule" aria-labelledby={`family-${family.id}`}>
-        <div class="u-container u-section">
-          <h2 id={`family-${family.id}`} data-reveal="fade" class="eyebrow eyebrow-accent">
-            {family.label}
-          </h2>
-
-          <ol class="mt-14 flex flex-col border-t border-rule" data-stagger>
-            {family.entries.map((entry, index) => (
-              <li class="border-b border-rule">
-                <a
-                  href={localizePath(`/exams/${entrySlug(entry)}`, locale)}
-                  class="group grid grid-cols-1 gap-x-10 gap-y-4 py-8 lg:grid-cols-[3.5rem_minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-baseline"
-                >
-                  <span class="font-mono text-meta text-accent tabnum">
-                    {String(index + 1 + familyIndex * 10).padStart(2, '0')}
-                  </span>
-
-                  <span class="flex flex-col gap-2">
-                    <span class="font-display text-h2 leading-none text-ink transition-colors duration-300 group-hover:text-accent">
-                      {entry.data.shortName}
-                    </span>
-                    <span class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
-                      {entry.data.fullName}
-                    </span>
-                  </span>
-
-                  <span class="max-w-lg text-caption leading-relaxed text-charcoal">
-                    {entry.data.summary}
-                  </span>
-
-                  <span
-                    aria-hidden="true"
-                    class="font-mono text-caption text-mist transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1.5 group-hover:text-accent"
-                  >
-                    →
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-    ))
-  }
-
-  <section class="edge-rule" aria-label={t('common.related')}>
-    <div class="u-container py-16">
-      <ul class="grid gap-x-10 gap-y-8 sm:grid-cols-2">
+  >
+    <div slot="aside" class="mt-8 border-t border-rule pt-5">
+      <ol class="flex flex-col gap-2.5">
         {
-          [
-            { href: '/systems', label: t('systems.title'), note: t('systems.lede') },
-            { href: '/pathways', label: t('pathways.title'), note: t('pathways.lede') },
-          ].map((item, index) => (
-            <li
-              data-reveal="up"
-              style={`--reveal-delay:${index * 70}ms`}
-              class="border-t border-rule pt-5"
-            >
-              <a href={localizePath(item.href, locale)} class="group block">
-                <p class="text-h3 text-ink transition-colors duration-300 group-hover:text-accent">
-                  {item.label}
-                </p>
-                <p class="mt-3 text-caption leading-relaxed text-graphite">{item.note}</p>
+          (
+            [
+              { num: '02.1', key: 'exams.comboTitle' },
+              { num: '02.2', key: 'exams.internalTitle' },
+              { num: '02.3', key: 'exams.externalTitle' },
+              { num: '02.4', key: 'exams.prepTitle' },
+            ] as { num: string; key: UIKey }[]
+          ).map((item) => (
+            <li class="flex items-baseline gap-3">
+              <span class="font-mono text-micro text-accent tabnum">{item.num}</span>
+              <a
+                href={`#${item.num.replace('.', '-')}`}
+                class="text-caption text-charcoal transition-colors duration-300 hover:text-accent"
+              >
+                {t(item.key)}
               </a>
             </li>
           ))
         }
+      </ol>
+    </div>
+  </PageHeader>
+
+  <!-- ═══ 02.1 Which exams do I have to sit ═══════════════════════════ -->
+  <section id="02-1" class="edge-rule scroll-mt-28" aria-labelledby="combo-title">
+    <div class="u-container u-section">
+      <div class="max-w-4xl">
+        <p data-reveal="fade" class="flex items-baseline gap-2.5 font-mono text-micro uppercase tabnum">
+          <span class="text-accent">02.1</span>
+          <span aria-hidden="true" class="text-rule">/</span>
+          <span class="text-graphite">{t('nav.exams')}</span>
+        </p>
+        <h2 id="combo-title" data-reveal="up" class="mt-6 font-display text-h2 text-ink">
+          {t('exams.comboTitle')}
+        </h2>
+        <p data-reveal="up" style="--reveal-delay:100ms" class="mt-7 max-w-2xl text-lead text-charcoal">
+          {t('exams.comboLede')}
+        </p>
+      </div>
+
+      <!-- One block per curriculum: internal (fixed) vs external (conditional) -->
+      <ol class="mt-16 flex flex-col border-t border-rule">
+        {
+          examCombinations.map((combination, index) => {
+            const system = systemBySlug.get(combination.system);
+
+            return (
+              <li
+                class="border-b border-rule py-9"
+                data-reveal="up"
+                style={`--reveal-delay:${(index % 5) * 45}ms`}
+              >
+                <div class="grid gap-x-10 gap-y-7 lg:grid-cols-[minmax(0,17rem)_minmax(0,1fr)]">
+                  <!-- System -->
+                  <div class="flex flex-col gap-2">
+                    <h3 class="font-display text-h3 text-ink">
+                      {system ? (
+                        <a
+                          href={localizePath(routes.system(combination.system), locale)}
+                          class="transition-colors duration-300 hover:text-accent"
+                        >
+                          {system.data.shortName}
+                        </a>
+                      ) : (
+                        combination.system.toUpperCase()
+                      )}
+                    </h3>
+                    <p class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                      {system ? system.data.title : ''}
+                    </p>
+                  </div>
+
+                  <div class="flex flex-col gap-6">
+                    <!-- Internal assessment -->
+                    <div class="border-l-2 border-ink pl-5">
+                      <p class="font-mono text-micro uppercase tracking-[0.14em] text-graphite">
+                        {t('exams.comboInternal')}
+                      </p>
+                      <p class="mt-2.5 text-body text-ink">{combination.internal[locale]}</p>
+                      <p class="mt-2 max-w-2xl text-caption leading-relaxed text-graphite">
+                        <span class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                          {t('exams.comboOutcome')} —
+                        </span>{' '}
+                        {combination.outcome[locale]}
+                      </p>
+                    </div>
+
+                    <!-- Conditional instruments -->
+                    <div>
+                      <p class="flex flex-wrap items-baseline gap-x-4 gap-y-2">
+                        <span class="font-mono text-micro uppercase tracking-[0.14em] text-accent">
+                          {t('exams.comboExtra')}
+                        </span>
+                        <span class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                          {t('exams.comboConditional')}
+                        </span>
+                      </p>
+
+                      {combination.external.length === 0 && (
+                        <p class="mt-3 text-caption text-graphite">{t('exams.comboNone')}</p>
+                      )}
+
+                      <ul class="mt-4 flex flex-col gap-4">
+                        {combination.external.map((item) => {
+                          const exam = examBySlug.get(item.slug);
+                          return (
+                            <li class="grid gap-1.5 sm:grid-cols-[minmax(0,15rem)_1fr] sm:gap-x-6">
+                              <span class="flex flex-wrap items-baseline gap-x-3">
+                                {exam ? (
+                                  <a
+                                    href={localizePath(routes.exam(item.slug), locale)}
+                                    class="link-underline font-mono text-micro uppercase tracking-[0.14em]"
+                                  >
+                                    {exam.data.shortName}
+                                  </a>
+                                ) : (
+                                  <span class="font-mono text-micro uppercase tracking-[0.14em] text-ink">
+                                    {item.slug}
+                                  </span>
+                                )}
+                                <span class="font-mono text-micro text-mist">
+                                  {externalReasonLabels[item.reason][locale]}
+                                </span>
+                              </span>
+                              <span class="text-caption leading-relaxed text-graphite">
+                                {item.note[locale]}
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            );
+          })
+        }
+      </ol>
+
+      <p
+        data-reveal="fade"
+        class="mt-10 max-w-3xl border-l border-accent pl-5 text-caption leading-relaxed text-graphite"
+      >
+        {t('exams.comboNote')}
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══ 02.2 Assessment inside a curriculum ═════════════════════════ -->
+  <section id="02-2" class="edge-rule scroll-mt-28" aria-labelledby="internal-title">
+    <div class="u-container u-section">
+      <div class="max-w-4xl">
+        <p data-reveal="fade" class="flex items-baseline gap-2.5 font-mono text-micro uppercase tabnum">
+          <span class="text-accent">02.2</span>
+          <span aria-hidden="true" class="text-rule">/</span>
+          <span class="text-graphite">{t('nav.exams')}</span>
+        </p>
+        <h2 id="internal-title" data-reveal="up" class="mt-6 font-display text-h2 text-ink">
+          {t('exams.internalTitle')}
+        </h2>
+        <p data-reveal="up" style="--reveal-delay:100ms" class="mt-7 max-w-2xl text-lead text-charcoal">
+          {t('exams.internalLede')}
+        </p>
+      </div>
+
+      <ul class="mt-16 grid gap-x-12 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+        {
+          systems.map((entry, index) => {
+            const slug = entrySlug(entry);
+            const base = localizePath(routes.system(slug), locale);
+            const anchors: { key: UIKey; hash: string }[] = [
+              { key: 'exams.internalGoAssessment', hash: '#assessment' },
+              { key: 'exams.internalGoPolicy', hash: '#policy' },
+              { key: 'exams.internalGoScale', hash: '#scale' },
+            ];
+
+            return (
+              <li
+                data-reveal="up"
+                style={`--reveal-delay:${index * 55}ms`}
+                class="flex flex-col border-t border-rule pt-6"
+              >
+                <h3 class="font-display text-h3 leading-none text-ink">
+                  <a href={base} class="transition-colors duration-300 hover:text-accent">
+                    {entry.data.shortName}
+                  </a>
+                </h3>
+                <p class="mt-3 text-caption leading-relaxed text-charcoal">
+                  {entry.data.assessment[0]}
+                </p>
+                <ul class="mt-6 flex flex-wrap gap-x-5 gap-y-2.5 border-t border-rule pt-4">
+                  {anchors.map((anchor) => (
+                    <li>
+                      <a
+                        href={`${base}${anchor.hash}`}
+                        class="link-underline font-mono text-micro uppercase tracking-[0.14em]"
+                      >
+                        {t(anchor.key)}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            );
+          })
+        }
       </ul>
+
+      <p
+        data-reveal="fade"
+        class="mt-12 max-w-3xl border-l border-accent pl-5 text-caption leading-relaxed text-graphite"
+      >
+        {t('exams.internalNote')}
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══ 02.3 Assessment outside a curriculum ════════════════════════ -->
+  <section id="02-3" class="edge-rule scroll-mt-28" aria-labelledby="external-title">
+    <div class="u-container u-section">
+      <div class="max-w-4xl">
+        <p data-reveal="fade" class="flex items-baseline gap-2.5 font-mono text-micro uppercase tabnum">
+          <span class="text-accent">02.3</span>
+          <span aria-hidden="true" class="text-rule">/</span>
+          <span class="text-graphite">{t('nav.exams')}</span>
+        </p>
+        <h2 id="external-title" data-reveal="up" class="mt-6 font-display text-h2 text-ink">
+          {t('exams.externalTitle')}
+        </h2>
+        <p data-reveal="up" style="--reveal-delay:100ms" class="mt-7 max-w-2xl text-lead text-charcoal">
+          {t('exams.externalLede')}
+        </p>
+      </div>
+
+      {
+        families.map((family) => (
+          <div class="mt-16">
+            <h3 data-reveal="fade" class="eyebrow eyebrow-accent">
+              {family.label}
+            </h3>
+            <ol class="mt-8 flex flex-col border-t border-rule">
+              {family.entries.map((entry, index) => (
+                <li class="border-b border-rule">
+                  <a
+                    href={localizePath(routes.exam(entrySlug(entry)), locale)}
+                    class="group grid grid-cols-1 gap-x-10 gap-y-3 py-6 lg:grid-cols-[3rem_minmax(0,1fr)_minmax(0,1.4fr)_auto] lg:items-baseline"
+                  >
+                    <span class="font-mono text-micro text-mist tabnum">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span class="flex flex-col gap-1.5">
+                      <span class="font-display text-h3 leading-none text-ink transition-colors duration-300 group-hover:text-accent">
+                        {entry.data.shortName}
+                      </span>
+                      <span class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                        {entry.data.fullName}
+                      </span>
+                    </span>
+                    <span class="max-w-lg text-caption leading-relaxed text-charcoal">
+                      {entry.data.summary}
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      class="font-mono text-caption text-mist transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1.5 group-hover:text-accent"
+                    >
+                      →
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))
+      }
+
+      <!-- Three roles: the distinction the whole section rests on -->
+      <div class="mt-20">
+        <h3 data-reveal="fade" class="eyebrow">
+          {t('exams.identityTitle')}
+        </h3>
+        <p data-reveal="up" class="mt-5 max-w-2xl text-body leading-relaxed text-charcoal">
+          {t('exams.identityDesc')}
+        </p>
+
+        <ul class="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-3">
+          {
+            roles.map((role, index) => (
+              <li
+                data-reveal="up"
+                style={`--reveal-delay:${index * 70}ms`}
+                class="border-t border-rule pt-5"
+              >
+                <p class="text-h4 text-ink">{t(role.key)}</p>
+                <p class="mt-2.5 text-caption leading-relaxed text-graphite">{t(role.noteKey)}</p>
+                <p class="mt-4 font-mono text-micro uppercase tracking-[0.14em] text-accent">
+                  {role.example}
+                </p>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 02.4 Preparation ════════════════════════════════════════════ -->
+  <section id="02-4" class="edge-rule scroll-mt-28" aria-labelledby="prep-title">
+    <div class="u-container u-section">
+      <div class="max-w-4xl">
+        <p data-reveal="fade" class="flex items-baseline gap-2.5 font-mono text-micro uppercase tabnum">
+          <span class="text-accent">02.4</span>
+          <span aria-hidden="true" class="text-rule">/</span>
+          <span class="text-graphite">{t('nav.exams')}</span>
+        </p>
+        <h2 id="prep-title" data-reveal="up" class="mt-6 font-display text-h2 text-ink">
+          {t('exams.prepTitle')}
+        </h2>
+        <p data-reveal="up" style="--reveal-delay:100ms" class="mt-7 max-w-2xl text-lead text-charcoal">
+          {t('exams.prepLede')}
+        </p>
+      </div>
+
+      {
+        shownPrep.length > 0 ? (
+          <div class="mt-16 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+            {shownPrep.map((entry) => (
+              <ArticleCard
+                title={entry.data.title}
+                summary={entry.data.summary}
+                href={localizePath(routes.prepArticle(entrySlug(entry)), locale)}
+                category={entry.data.subject ?? t('prep.title')}
+                readingMinutes={entry.data.readingMinutes}
+                updatedAt={entry.data.updatedAt}
+                systems={entry.data.subject ? [entry.data.subject] : undefined}
+                locale={locale}
+              />
+            ))}
+          </div>
+        ) : (
+          <p class="mt-12 border-t border-dashed border-rule pt-6 text-caption text-graphite">
+            {t('exams.prepEmpty')}
+          </p>
+        )
+      }
+
+      <p class="mt-14">
+        <a
+          href={localizePath(routes.prep, locale)}
+          class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
+        >
+          {t('exams.prepCta')} →
+        </a>
+      </p>
     </div>
   </section>
 </BaseLayout>

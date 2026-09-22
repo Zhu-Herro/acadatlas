@@ -1,0 +1,185 @@
+---
+/**
+ * A preparation article.
+ *
+ * Structurally the same editorial layout as a guide, with one addition that is
+ * not optional: the EvidenceNote band. Preparation content mixes official facts
+ * with practical judgement, and the reader has to be able to tell which is
+ * which before they act on it.
+ */
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ArticleHero from '@/components/ArticleHero.astro';
+import EvidenceNote from '@/components/EvidenceNote.astro';
+import SourceList from '@/components/SourceList.astro';
+import RelatedContent from '@/components/RelatedContent.astro';
+import { routes } from '@/data/routes';
+import { createLinker, inLocale, resolveWithFallback, sortEntries } from '@/lib/content';
+import { resolveSources } from '@/lib/sources';
+import { localizePath, useTranslations, type Locale } from '@/i18n/utils';
+import { articleSchema, breadcrumbSchema, buildSeo } from '@/lib/seo';
+
+interface Props {
+  slug: string;
+  locale: Locale;
+}
+
+const { slug, locale } = Astro.props;
+const t = useTranslations(locale);
+
+const allPrep = await getCollection('prep');
+const resolved = resolveWithFallback(allPrep, slug, locale);
+
+if (!resolved) {
+  return Astro.redirect(localizePath('/404', locale), 302);
+}
+
+const { entry } = resolved;
+const data = entry.data;
+const { Content, headings } = await render(entry);
+
+const pagePath = routes.prepArticle(slug);
+const sources = resolveSources(data.sources);
+const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+
+const linkPrep = createLinker(sortEntries(inLocale(allPrep, locale)), routes.prep);
+const related = data.related
+  .map((relatedSlug) => linkPrep(relatedSlug, locale))
+  .filter((link): link is NonNullable<typeof link> => link !== null);
+
+const crumbs = [
+  { name: t('common.home'), path: routes.home },
+  { name: t('exams.title'), path: routes.exams },
+  { name: t('prep.title'), path: routes.prep },
+  { name: data.title, path: pagePath },
+];
+
+const seo = buildSeo({
+  title: data.title,
+  description: data.summary,
+  locale,
+  path: pagePath,
+  type: 'article',
+  publishedTime: data.publishedAt,
+  modifiedTime: data.updatedAt,
+  jsonLd: [
+    articleSchema({
+      title: data.title,
+      description: data.summary,
+      path: pagePath,
+      locale,
+      publishedTime: data.publishedAt,
+      modifiedTime: data.updatedAt,
+      section: t('prep.title'),
+      keywords: data.tags,
+    }),
+    breadcrumbSchema(
+      crumbs.map((crumb) => ({ name: crumb.name, path: crumb.path })),
+      locale,
+    ),
+  ],
+});
+---
+
+<BaseLayout locale={locale} seo={seo}>
+  <ArticleHero
+    locale={locale}
+    category={t('prep.title')}
+    kicker={data.subject}
+    title={data.title}
+    lede={data.lede}
+    systems={[data.system === 'any' ? t('prep.all') : data.system.toUpperCase()]}
+    publishedAt={data.publishedAt}
+    updatedAt={data.updatedAt}
+    readingMinutes={data.readingMinutes}
+    heroVariant={data.heroVariant}
+    academicYear={data.academicYear}
+    crumbs={crumbs}
+  />
+
+  <div class="edge-rule">
+    <div class="u-container py-16 lg:py-20">
+      <div class="grid gap-12 lg:grid-cols-12 lg:gap-x-16">
+        <!-- Contents -->
+        <aside class="lg:col-span-3">
+          {
+            toc.length > 0 && (
+              <nav aria-label={t('common.onThisPage')} class="lg:sticky lg:top-32">
+                <h2 class="eyebrow">{t('common.onThisPage')}</h2>
+                <ol class="mt-6 flex flex-col gap-3">
+                  {toc.map((heading) => (
+                    <li class:list={[heading.depth === 3 && 'pl-5']}>
+                      <a
+                        href={`#${heading.slug}`}
+                        class="text-caption leading-snug text-graphite transition-colors duration-300 hover:text-accent"
+                      >
+                        {heading.text}
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              </nav>
+            )
+          }
+        </aside>
+
+        <div class="lg:col-span-8 lg:col-start-5">
+          <!-- Evidence + partnership disclosure, above the body, always -->
+          <EvidenceNote
+            evidenceType={data.evidenceType}
+            locale={locale}
+            academicYear={data.academicYear}
+            sponsored={data.sponsored}
+            sponsorName={data.sponsorName}
+            class="mb-12"
+          />
+
+          <div class="editorial-prose max-w-2xl">
+            <Content />
+          </div>
+
+          {
+            sources.length > 0 && (
+              <section class="mt-20 border-t border-rule pt-12" aria-labelledby="prep-sources">
+                <h2 id="prep-sources" class="eyebrow eyebrow-accent">
+                  {t('prep.references')}
+                </h2>
+                <div class="mt-8">
+                  <SourceList
+                    sources={sources}
+                    locale={locale}
+                    updatedAt={data.updatedAt}
+                    academicYear={data.academicYear}
+                  />
+                </div>
+              </section>
+            )
+          }
+
+          {
+            related.length > 0 && (
+              <section class="mt-20 border-t border-rule pt-12">
+                <RelatedContent items={related} locale={locale} label={t('common.relatedArticles')} />
+              </section>
+            )
+          }
+
+          <p class="mt-16 flex flex-wrap items-baseline gap-x-8 gap-y-3 border-t border-rule pt-8">
+            <a
+              href={localizePath(routes.prep, locale)}
+              class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
+            >
+              {t('prep.title')} →
+            </a>
+            <a
+              href={localizePath(routes.exams, locale)}
+              class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
+            >
+              {t('exams.title')} →
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,22 @@
+---
+/**
+ * `/exams/prep/[slug]` — preparation articles.
+ *
+ * Note the reserved-segment guard: `prep` is a real page under `/exams`, so an
+ * exam slug of "prep" would shadow it. `src/lib/integrity.ts` fails the build
+ * if that ever happens.
+ */
+import type { GetStaticPaths } from 'astro';
+import { getCollection } from 'astro:content';
+import { collectSlugs } from '@/lib/content';
+import PrepArticlePage from '@/views/PrepArticlePage.astro';
+
+export const getStaticPaths = (async () => {
+  const entries = await getCollection('prep');
+  return collectSlugs(entries).map((slug) => ({ params: { slug } }));
+}) satisfies GetStaticPaths;
+
+const { slug } = Astro.params as { slug: string };
+---
+
+<PrepArticlePage slug={slug} locale="zh" />
