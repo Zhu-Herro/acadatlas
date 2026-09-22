@@ -1,10 +1,11 @@
-# EDUNOVA
+# ACADATLAS
 
 一个面向学生、家长与教育从业者的**国际教育信息与决策平台**。
 
 内容驱动架构 · Editorial 设计语言 · 双语 · 可静态部署 · 可平滑扩展。
 
-> `EDUNOVA` 是当前品牌名。所有品牌字符串集中在一个文件里（`src/site.config.ts`），改一处即可全站替换。
+> `ACADATLAS` 是当前品牌名。所有品牌字符串集中在一个文件里（`src/site.config.ts`），改一处即可全站替换。
+> 品牌改名历史：`EDUVERSE`（开发占位）→ `EDUNOVA` → `ACADATLAS`（现行）。
 
 ---
 
@@ -263,7 +264,7 @@ npm run check   # Astro + TypeScript 诊断（当前 0 error / 0 warning / 0 hin
 ```bash
 git init
 git add .
-git commit -m "feat: EDUVERSE initial release"
+git commit -m "feat: ACADATLAS initial release"
 git branch -M main
 git remote add origin https://github.com/<你的账号>/<仓库名>.git
 git push -u origin main
@@ -295,7 +296,13 @@ git push -u origin main
 3. `public/robots.txt` → `Sitemap:` 行
 
 > 若在 Netlify 里改了站点名（或换成自有域名），把这 3 处一起改掉再重新部署即可。
-> `edunova.netlify.app` 与 `edunova-edu.netlify.app` 已分别被他人占用/弃用，当前使用 `acadatlas`。
+>
+> Netlify 站点名与仓库名均为 `acadatlas`。此前探测过 `edunova` / `edunova-education` / `edu-nova` / `edunova2026`，均已被他人占用。
+
+### 生产环境注意事项
+
+- **访问保护必须关闭**：若站点开启了 Netlify 的 Password protection / Edge Access，任何访客都会收到 `401 Unauthorized` 与 `edge-access` 登录跳转页，搜索引擎同样无法抓取。路径：`Site configuration → Access & security`。
+- **联系邮箱是占位值**：`src/site.config.ts` 中的 `hello@acadatlas.example` 使用 RFC 2606 保留域名，不会误指向任何第三方邮箱。上线推广前请替换为真实收件箱。
 
 连接 GitHub 仓库后 Netlify 会自动构建；或使用 CLI：
 

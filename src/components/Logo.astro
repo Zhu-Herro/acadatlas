@@ -33,10 +33,12 @@ const { locale, size = 'sm' } = Astro.props;
   </svg>
   <span
     class:list={[
-      'font-sans font-medium uppercase leading-none',
+      // `whitespace-nowrap` matters: the brand wordmark must never wrap onto a
+      // second line inside the sticky header, however long the brand name is.
+      'whitespace-nowrap font-sans font-medium uppercase leading-none',
       size === 'lg'
-        ? 'text-[1.0625rem] tracking-[0.34em]'
-        : 'text-[0.8125rem] tracking-[0.3em]',
+        ? 'text-[1.0625rem] tracking-[0.3em]'
+        : 'text-[0.8125rem] tracking-[0.26em]',
       'transition-colors duration-300 group-hover:text-accent',
     ]}
   >

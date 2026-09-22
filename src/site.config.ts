@@ -2,13 +2,13 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * CENTRAL BRAND CONFIGURATION
  * ─────────────────────────────────────────────────────────────────────────────
- * `EDUNOVA` is the brand. Every brand string lives here and is never
+ * `ACADATLAS` is the brand. Every brand string lives here and is never
  * hard-coded inside components or pages, so rebranding the platform is a
  * single-file change.
  *
  * Usage:
  *   import { site } from '@/site.config';
- *   site.name            // "EDUNOVA"
+ *   site.name            // "ACADATLAS"
  *   site.tagline.en      // "Understand education. Make better choices."
  *   site.description.zh  // meta description (Chinese)
  */
@@ -29,12 +29,12 @@ export interface SourceLink {
 
 export const site = {
   /** Short brand mark used in the header and footer. */
-  name: 'EDUNOVA',
+  name: 'ACADATLAS',
 
   /** Longer legal / descriptive name used in structured data and the footer. */
   legalName: {
-    zh: 'EDUNOVA 国际教育信息平台',
-    en: 'EDUNOVA International Education Information Platform',
+    zh: 'ACADATLAS 国际教育信息平台',
+    en: 'ACADATLAS International Education Information Platform',
   } satisfies Localized,
 
   /**
@@ -62,10 +62,15 @@ export const site = {
    */
   ogImage: '/og-default.png',
 
-  /** Contact details — placeholders until real inboxes exist. */
+  /**
+   * Contact details.
+   * `.example` is the RFC 2606 reserved TLD — a deliberate placeholder so no
+   * real third-party inbox is published by accident. Replace both values with
+   * the real brand inbox before promoting the site.
+   */
   contact: {
-    email: 'hello@edunova.example',
-    wechat: 'EDUNOVA',
+    email: 'hello@acadatlas.example',
+    wechat: 'ACADATLAS',
   },
 
   /** Launch year, used for the footer copyright line. */
