@@ -1,0 +1,350 @@
+---
+/**
+ * /china — 中国内地升学 (mainland China admission routes).
+ *
+ * The China-facing interpretation layer the brief asks for: instead of
+ * paraphrasing policy, it publishes the two official routes with the exact
+ * standards stated in the Ministry of Education notice and the joint
+ * admissions office announcement, and links every claim to its document.
+ *
+ * The page's most important job is conceptual: explaining that the DSE route
+ * works on a LEVEL COMBINATION, not a converted score. That single distinction
+ * prevents most misreading of the numbers that follow.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import { chinaRoutes, verificationPointers } from '@/data/chinaRoutes';
+import { pendingRequirements } from '@/data/requirements';
+import { resolveSources } from '@/lib/sources';
+import { localizePath, useTranslations, type Locale } from '@/i18n/utils';
+import { breadcrumbSchema, buildSeo } from '@/lib/seo';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const seo = buildSeo({
+  title: t('china.title'),
+  description: t('china.lede'),
+  locale,
+  path: '/china',
+  jsonLd: [
+    breadcrumbSchema(
+      [
+        { name: t('common.home'), path: '/' },
+        { name: t('china.title'), path: '/china' },
+      ],
+      locale,
+    ),
+  ],
+});
+---
+
+<BaseLayout locale={locale} seo={seo}>
+  <PageHeader
+    locale={locale}
+    number="10"
+    eyebrow={t('nav.china')}
+    title={[t('china.title')]}
+    lede={t('china.lede')}
+    crumbs={[
+      { name: t('common.home'), path: '/' },
+      { name: t('china.title'), path: '/china' },
+    ]}
+  />
+
+  <!-- ── The structural point, stated first ─────────────────────────── -->
+  <section class="edge-rule" aria-labelledby="structural-title">
+    <div class="u-container py-16 lg:py-20">
+      <div class="grid gap-12 lg:grid-cols-12 lg:gap-x-16">
+        <div class="lg:col-span-5">
+          <p data-reveal="fade" class="eyebrow eyebrow-accent">
+            {t('china.structuralTitle')}
+          </p>
+          <h2
+            id="structural-title"
+            data-stagger
+            class="mt-7 font-display text-h1 text-ink"
+          >
+            <span class="block">{locale === 'zh' ? '等级制' : 'Levels, not'}</span>
+            <span class="block">{locale === 'zh' ? '与总分制' : 'a total score.'}</span>
+          </h2>
+        </div>
+        <div class="lg:col-span-7 lg:pt-4">
+          <p data-reveal="up" class="max-w-2xl text-lead text-charcoal">
+            {t('china.structuralBody')}
+          </p>
+          <p
+            data-reveal="up"
+            style="--reveal-delay:120ms"
+            class="mt-8 max-w-2xl border-l-2 border-accent pl-5 font-mono text-body text-ink"
+          >
+            {locale === 'zh' ? '3、3、2、A' : '3, 3, 2, A'}
+          </p>
+          <p class="mt-3 max-w-2xl text-caption text-graphite">
+            {locale === 'zh'
+              ? '中语文 ≥ 第 3 级 · 英语文 ≥ 第 3 级 · 数学 ≥ 第 2 级 · 公民科达标'
+              : 'Chinese ≥ L3 · English ≥ L3 · Mathematics ≥ L2 · Citizenship attained'}
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── The two official routes ────────────────────────────────────── -->
+  {
+    chinaRoutes.map((route, routeIndex) => {
+      const sources = resolveSources(route.sources);
+
+      return (
+        <section class="edge-rule" aria-labelledby={`route-${route.id}`}>
+          <div class="u-container u-section">
+            {/* Route header */}
+            <div class="grid gap-10 lg:grid-cols-12 lg:gap-x-16">
+              <div class="lg:col-span-4">
+                <p data-reveal="fade" class="flex items-baseline gap-2.5 font-mono text-micro uppercase tabnum">
+                  <span class="text-accent">{String(routeIndex + 1).padStart(2, '0')}</span>
+                  <span aria-hidden="true" class="text-rule">/</span>
+                  <span class="text-graphite">{t('nav.china')}</span>
+                </p>
+                <h2
+                  id={`route-${route.id}`}
+                  data-reveal="up"
+                  class="mt-6 font-display text-h2 text-ink"
+                >
+                  {route.name[locale]}
+                </h2>
+                <p data-reveal="fade" class="mt-6 meta-mono text-mist">
+                  {route.academicYear} · {t('requirements.verifiedOn', { date: route.verifiedAt })}
+                </p>
+              </div>
+
+              <div class="lg:col-span-8 flex flex-col gap-8">
+                <div>
+                  <h3 class="eyebrow">{t('china.audience')}</h3>
+                  <p class="mt-4 max-w-2xl text-caption leading-relaxed text-charcoal">
+                    {route.audience[locale]}
+                  </p>
+                </div>
+                <div>
+                  <h3 class="eyebrow">{t('china.summary')}</h3>
+                  <p class="mt-4 max-w-2xl text-body-lg leading-relaxed text-charcoal">
+                    {route.summary[locale]}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Key standards — the numbers that actually matter */}
+            <div class="mt-20">
+              <h3 data-reveal="fade" class="eyebrow eyebrow-accent">
+                {t('china.keyStandards')}
+              </h3>
+
+              <dl class="mt-10 flex flex-col border-t border-rule">
+                {route.facts.map((fact, index) => (
+                  <div
+                    data-reveal="up"
+                    style={`--reveal-delay:${index * 45}ms`}
+                    class:list={[
+                      'grid gap-2 border-b border-rule py-6 sm:grid-cols-[minmax(0,15rem)_1fr] sm:gap-10',
+                      fact.emphasis && 'bg-paper-raised px-4 sm:px-6',
+                    ]}
+                  >
+                    <dt class="font-mono text-micro uppercase leading-relaxed tracking-[0.14em] text-mist">
+                      {fact.label[locale]}
+                    </dt>
+                    <dd
+                      class:list={[
+                        'leading-relaxed',
+                        fact.emphasis ? 'text-body-lg text-ink' : 'text-caption text-charcoal',
+                      ]}
+                    >
+                      {fact.value[locale]}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+
+            {/* Official timeline */}
+            {route.steps && route.steps.length > 0 && (
+              <div class="mt-20">
+                <h3 data-reveal="fade" class="eyebrow eyebrow-accent">
+                  {t('china.timeline')}
+                </h3>
+
+                <ol class="mt-10 flex flex-col">
+                  {route.steps.map((step, index) => (
+                    <li
+                      data-reveal="up"
+                      style={`--reveal-delay:${index * 40}ms`}
+                      class="grid grid-cols-[auto_1fr] gap-x-6 pb-8 last:pb-0 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-x-10"
+                    >
+                      <div class="relative flex justify-start">
+                        <span class="font-mono text-meta tabnum text-accent">{step.step}</span>
+                      </div>
+                      <div class="relative border-l border-rule pl-6">
+                        <span
+                          aria-hidden="true"
+                          class="absolute -left-[3px] top-2 h-1.5 w-1.5 rounded-full bg-accent"
+                        />
+                        <p class="max-w-2xl text-caption leading-relaxed text-charcoal">
+                          {step.detail[locale]}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
+            {/* Caveats */}
+            <div class="mt-20 grid gap-8 lg:grid-cols-12 lg:gap-x-16">
+              <div class="lg:col-span-4">
+                <h3 data-reveal="fade" class="eyebrow">
+                  {t('china.caveats')}
+                </h3>
+              </div>
+              <ul class="lg:col-span-8 flex flex-col gap-4">
+                {route.caveats.map((caveat) => (
+                  <li class="max-w-2xl border-l border-accent pl-5 text-caption leading-relaxed text-graphite">
+                    {caveat[locale]}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Primary sources for this route */}
+            <div class="mt-16 border-t border-rule pt-8">
+              <h3 class="eyebrow">{t('china.referenceTitle')}</h3>
+              <ul class="mt-6 flex flex-wrap gap-x-8 gap-y-3">
+                {sources.map((source) => (
+                  <li>
+                    <a
+                      href={source.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="link-underline font-mono text-micro uppercase tracking-[0.12em]"
+                    >
+                      {source.label} ↗
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+      );
+    })
+  }
+
+  <!-- ── The honest gap, in public ──────────────────────────────────── -->
+  <section class="edge-rule" aria-labelledby="gap-title">
+    <div class="u-container u-section">
+      <div class="grid gap-12 lg:grid-cols-12 lg:gap-x-16">
+        <div class="lg:col-span-4">
+          <h2 id="gap-title" data-reveal="fade" class="eyebrow">
+            {t('requirements.statusPending')}
+          </h2>
+          <p data-reveal="up" class="mt-6 max-w-xs text-caption leading-relaxed text-graphite">
+            {t('requirements.pendingExplain')}
+          </p>
+        </div>
+
+        <div class="lg:col-span-8">
+          <ul class="flex flex-col border-t border-dashed border-rule">
+            {
+              pendingRequirements.map((row) => (
+                <li class="border-b border-dashed border-rule py-6" data-reveal="up">
+                  <p class="text-h4 text-graphite">{row.scope[locale]}</p>
+                  <p class="mt-2.5 max-w-2xl text-caption leading-relaxed text-graphite">
+                    {row.requirement[locale]}
+                  </p>
+                </li>
+              ))
+            }
+          </ul>
+
+          <p class="mt-10">
+            <a
+              href={localizePath('/requirements', locale)}
+              class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
+            >
+              {t('china.goRequirements')} →
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Where to verify ────────────────────────────────────────────── -->
+  <section class="edge-rule" aria-labelledby="verify-title">
+    <div class="u-container u-section">
+      <h2 id="verify-title" data-reveal="fade" class="eyebrow eyebrow-accent">
+        {t('requirements.pointerTitle')}
+      </h2>
+
+      <ul class="mt-12 grid gap-x-10 gap-y-0 sm:grid-cols-2">
+        {
+          verificationPointers.map((pointer, index) => (
+            <li class="border-t border-rule" data-reveal="up" style={`--reveal-delay:${index * 50}ms`}>
+              <a
+                href={pointer.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group flex flex-col gap-2.5 py-5"
+              >
+                <span class="flex items-start justify-between gap-4">
+                  <span class="text-h4 leading-snug text-ink transition-colors duration-300 group-hover:text-accent">
+                    {pointer.label[locale]}
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    class="mt-0.5 shrink-0 font-mono text-caption text-mist transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent"
+                  >
+                    ↗
+                  </span>
+                </span>
+                <span class="text-caption leading-relaxed text-graphite">
+                  {pointer.description[locale]}
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+
+      <div class="mt-16 border-t border-rule pt-8">
+        <h3 class="eyebrow">{t('china.disclaimerTitle')}</h3>
+        <p class="mt-6 max-w-3xl text-caption leading-relaxed text-graphite">
+          {t('china.disclaimer')}
+        </p>
+        <p class="mt-8 flex flex-wrap items-baseline gap-x-8 gap-y-3">
+          <a
+            href={localizePath('/requirements', locale)}
+            class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
+          >
+            {t('china.goRequirements')} →
+          </a>
+          <a
+            href={localizePath('/compare', locale)}
+            class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
+          >
+            {t('china.goCompare')} →
+          </a>
+          <a
+            href={localizePath('/systems/dse', locale)}
+            class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
+          >
+            DSE →
+          </a>
+        </p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

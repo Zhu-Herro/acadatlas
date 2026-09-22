@@ -46,7 +46,11 @@ EducationWeb/
     │   ├── navigation.ts       导航模型（header / drawer / footer / 静态页）
     │   ├── dimensions.ts       9 个比较维度定义
     │   ├── pathways.ts         升学目的地登记表
-    │   └── educationChain.ts   教育链条 6 个环节
+    │   ├── educationChain.ts   教育链条 6 个环节
+    │   ├── policies.ts      ★ 各体系官方报考与评核安排（带出处）
+    │   ├── scales.ts        ★ 全部评分与等级体系（带出处）
+    │   ├── requirements.ts  ★ 录取要求数据底座（verified / pending）
+    │   └── chinaRoutes.ts   ★ 中国内地两条官方升学渠道
     ├── i18n/
     │   ├── ui.ts             # ★ UI 字典（zh 为键集合的唯一来源，en 必须完整镜像）
     │   └── utils.ts          # 路由本地化、翻译器、日期格式化
@@ -56,8 +60,8 @@ EducationWeb/
     │   ├── seo.ts            # metadata + JSON-LD 构建器
     │   └── sources.ts        # 来源解析（登记表键 ↔ 显式 label/href）
     ├── layouts/BaseLayout.astro
-    ├── components/           # 21 个组件（见第 4 节）
-    ├── views/                # 12 个页面级视图（自带布局与 SEO）
+    ├── components/           # 28 个可复用组件（见第 4 节）
+    ├── views/                # 14 个页面级视图（自带布局与 SEO）
     ├── scripts/motion.ts     # 滚动动画系统（无依赖）
     ├── styles/global.css     # ★ 设计系统（token / 基座 / 动效 / reduced-motion）
     └── pages/                # 路由壳体（极薄，仅绑定 locale）
@@ -76,7 +80,7 @@ EducationWeb/
 
 ## 3. 已完成页面
 
-默认语言（中文，无前缀）与英文（`/en/` 前缀）**双份**，共 **52 个静态页面**。
+默认语言（中文，无前缀）与英文（`/en/` 前缀）**双份**，共 **56 个静态页面**。
 
 | 路由 | 说明 |
 | --- | --- |
@@ -86,6 +90,8 @@ EducationWeb/
 | `/exams` · `/en/exams` | 考试体系（按「入学标准化考试 / 语言测试」分组） |
 | `/exams/sat` `/act` `/ielts` `/toefl` | 考试详情（复用同一模板，01–08） |
 | `/pathways` · `/en/pathways` | 升学路径：路径关系图 + 7 个目的地 |
+| `/china` · `/en/china` | **中国内地升学**：两条官方渠道 + 关键标准 + 官方时间线 + 一手出处 |
+| `/requirements` · `/en/requirements` | **录取要求中枢**：已核验数据台帐（可筛选）+ 待核验缺口 + 官方核对入口 + 核验方法 |
 | `/guides` · `/en/guides` | 教育指南（分类区块 + 精选） |
 | `/guides/{7 篇}` | 文章页：分类 → 超大标题 → 元信息 → 生成式视觉 → 目录 → 正文 → 来源 → 相关 |
 | `/compare` · `/en/compare` | 比较工具（2–4 体系，9 维度，可展开，URL 可分享） |
@@ -94,7 +100,13 @@ EducationWeb/
 | `/contact` · `/en/contact` | 联系：直连邮箱 + 表单骨架（未接后端，已注明） |
 | `/404` · `/en/404` | 404：真实导航出口 + 搜索入口 |
 | `/search.json` | 客户端搜索索引（构建期生成，含全部语言） |
+| `/integrity.json` | 构建期溯源报告：已核验 / 待核验清单，`ok: false` 会让构建失败 |
 | `/sitemap-index.xml` | 自动生成的 sitemap（含 hreflang） |
+
+体系 / 考试详情页在原有 **01–09** 结构之后新增两节：
+
+- **官方政策** —— 主办机构、科目分类、报名窗口、评核构成、注意事项（数据源 `policies.ts`）
+- **分数与等级** —— 完整等级表 + 等级含义 + 官方口径说明 + 该评分体系专属的出处与核验日期（数据源 `scales.ts`）
 
 ---
 
@@ -136,7 +148,7 @@ EducationWeb/
 
 `u-container`（1440px 上限 + 流体边距）· `u-section`（流式纵向留白）· `u-measure` · `u-rule`（可自绘的 1px 线）· `eyebrow`（全大写微标签）· `meta-mono` · `link-underline` · `bg-coordinate`（坐标网格）· `editorial-prose`（长文排版，手写而非插件）
 
-### 组件（21 个）
+### 组件（28 个）
 
 `Logo` `Header` `Footer` `LanguageSwitcher` `SearchDialog` `Hero` `HeroNetwork` `GeneratedVisual` `ImageReveal` `ScrollReveal` `SectionHeader` `SectionNumber` `PageHeader` `Breadcrumb` `Metric` `Timeline` `EditorialList` `SystemCard` `ArticleCard` `ArticleHero` `ProfileSection` `SystemCompare` `CompareTool` `FAQ` `SourceList` `RelatedContent` `EducationChain` `PathwayDiagram`
 
@@ -344,6 +356,69 @@ netlify deploy --build --prod
 ### 内容迁移到 CMS / 数据库
 
 `lib/content.ts` 是集合访问的**唯一入口**。把其中的集合查询换成 API / SDK 调用（返回相同形状的 `{ id, data }`），页面与组件无需修改。schema 已在 `content.config.ts` 中集中定义，可直接作为数据库列定义或 CMS 字段配置使用。
+
+---
+
+## 6.5 事实性数据底座与核验机制
+
+平台可能被用于真实的升学决策，因此**时效性数据不是「写在页面里」，而是「存在带出处的数据层里」**，并由构建流程强制约束。
+
+### 数据层
+
+| 文件 | 内容 | 数量 |
+| --- | --- | --- |
+| `src/data/policies.ts` | 各体系 / 考试的官方报考与评核安排（主办机构、科目分类、报名窗口、评核构成、注意事项） | 9 条 |
+| `src/data/scales.ts` | 全部评分与等级体系（DSE 1–5\*\*、IB 45 分制、A-Level A\*–E、IGCSE、AP 1–5、SAT、ACT、IELTS、TOEFL） | 9 条 |
+| `src/data/requirements.ts` | 院校 / 官方录取要求，**每条必须带出处、适用学年与核验状态** | 13 条（已核验 10 · 待核验 3） |
+| `src/data/chinaRoutes.ts` | 中国内地两条官方升学渠道（教育部文凭试收生计划、全国联招）及其官方时间线与核对入口 | 2 条 |
+| `src/site.config.ts` → `officialBodies` | 全部官方机构与公告的登记表（一处修改、全站生效） | 19 个 |
+
+### 两个状态，一个守门人
+
+每条要求记录都带 `status`：
+
+- **`verified`（已核验）** —— 数值读自官方一手来源，并附上该来源。**若声称已核验却没有可解析的来源，构建直接失败。**
+- **`pending`（待核验）** —— 我们知道这个数字存在、也明确知道它发布在哪里，但尚未完成核对录入。页面上以虚线框与「待核验」标记呈现，**绝不显示任何数字**。
+
+守门人：`src/lib/integrity.ts`，通过 `src/pages/integrity.json.ts` 在**构建期**执行（`assertIntegrity()`）。硬性失败条件：
+
+- 标记 `verified` 但来源缺失 / 无法解析
+- 来源链接不是绝对 URL
+- 缺少 `academicYear` 或 `verifiedAt`
+- 评分体系 / 政策 / 渠道条目没有任何来源
+- 重复的 requirement id
+
+构建产物 `/integrity.json` 是公开的机器可读声明：哪些已核验、哪些还是缺口。
+
+### 目前收录的一手事实（2026-09 核验）
+
+| 来源 | 内容 |
+| --- | --- |
+| 教育部《2026 年内地高校招收香港中学文凭考试学生办法》（2025-11-03） | 最低录取标准「3、3、2、A」、校长推荐计划（三门核心 ≥8 分、单科 ≥2、每校 8 名）、艺体类「2、2、1、A」、残障考生标准、报名与录取全流程时间线、4 校 × 4 专业志愿规则、报名费港币 460 元 |
+| 联招〔2026〕20 号（广东省教育考试院公告，2026-06-18） | 2026 全国联招本科普通类（文史 430／理工 445）、高分线（515／535）、艺术与体育类（330／345）、预科（410／425，暨南大学 495／515） |
+| HKEAA 官方页 | 甲 / 乙 / 丙类科目分类、2027 年文凭试报名与特殊报考窗口、考试费公布安排 |
+| Cambridge International 官方页 | AS 可延伸至完整 A Level、数十门科目可自由组合 |
+| 上海财经大学招生简章 | 院校附加要求高于全国最低标准的实例（要求总分不低于 11 分） |
+
+### 扩充一条要求（不需要写代码）
+
+在 `src/data/requirements.ts` 追加一个对象即可——页面、筛选、sitemap、搜索索引会自动收录，守门人会自动校验出处：
+
+```ts
+{
+  id: 'xxx-2027',
+  system: 'dse',                 // 或 'any'
+  route: 'jupas',                // mainland | jupas | uk | us | other
+  scope:    { zh: '单所院校要求', en: 'Single-institution requirement' },
+  institution: { zh: '某某大学', en: 'Some University' },
+  programme:   { zh: '全部专业', en: 'All programmes' },
+  requirement: { zh: '……', en: '……' },
+  academicYear: '2027/28',
+  status: 'verified',            // 没有 source 就会构建失败
+  source: { label: '院校招生简章', href: 'https://…' },
+  verifiedAt: '2027-03-01',
+}
+```
 
 ---
 

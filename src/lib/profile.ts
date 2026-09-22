@@ -14,8 +14,10 @@ import type { CollectionEntry } from 'astro:content';
 import { localizePath, type Locale } from '@/i18n/utils';
 import { getPathway, pathwayAnchor } from '@/data/pathways';
 import { comparisonKeys, type ComparisonKey } from '@/data/dimensions';
+import { getGradeScale } from '@/data/scales';
+import { getPolicy } from '@/data/policies';
 import { createLinker, entrySlug, type EntryLink } from './content';
-import { resolveSources, type ResolvedSource } from './sources';
+import { resolveSource, resolveSources, type ResolvedSource } from './sources';
 import type { Translator } from '@/i18n/utils';
 
 /** ── Presentational blocks ─────────────────────────────────────────────── */
@@ -28,7 +30,17 @@ export type ProfileBlock =
   | { type: 'destinations'; items: { id: string; name: string; note?: string; href: string }[] }
   | { type: 'compare'; items: { slug: string; name: string; href: string }[] }
   | { type: 'faq'; items: { q: string; a: string }[] }
-  | { type: 'sources'; items: ResolvedSource[] };
+  | { type: 'sources'; items: ResolvedSource[] }
+  /** Reporting scale with its own provenance trail (see src/data/scales.ts). */
+  | {
+      type: 'scale';
+      range: string;
+      intro: string;
+      rows: { grade: string; meaning: string }[];
+      notes: string[];
+      evidence: { label: string; href: string }[];
+      meta: string;
+    };
 
 export interface ProfileSection {
   /** Anchor id, e.g. `overview`. */
@@ -70,6 +82,87 @@ export interface ProfileView {
 /** Zero-padded section number. */
 function sectionNumber(index: number): string {
   return String(index + 1).padStart(2, '0');
+}
+
+/**
+ * Sections 10 and 11, shared by system AND exam profiles.
+ *
+ * The facts come from `src/data/policies.ts` and `src/data/scales.ts` rather
+ * than from per-entry frontmatter, because they are reference data about the
+ * qualification itself: they change rarely, they are identical for every
+ * language version, and they must carry one verifiable source per claim.
+ *
+ * Returns an empty array when there is nothing verified to show — the template
+ * never renders an empty section, and the integrity guard prevents an
+ * unsourced one from being written in the first place.
+ */
+function buildReferenceSections(options: {
+  slug: string;
+  locale: Locale;
+  name: string;
+  t: Translator;
+  sectionCount: number;
+}): ProfileSection[] {
+  const { slug, locale, name, t, sectionCount } = options;
+  const sections: ProfileSection[] = [];
+
+  const policy = getPolicy(slug);
+  if (policy) {
+    sections.push({
+      id: 'policy',
+      number: sectionNumber(sectionCount + sections.length),
+      label: t('section.policy.label'),
+      question: t('section.policy.question', { name }),
+      blocks: [
+        { type: 'prose', items: [policy.intro[locale]] },
+        {
+          type: 'pairs',
+          items: policy.facts.map((fact) => ({
+            label: fact.label[locale],
+            value: fact.value[locale],
+          })),
+        },
+        { type: 'points', items: policy.caveats.map((caveat) => caveat[locale]) },
+        {
+          type: 'links',
+          items: [
+            {
+              slug: 'requirements',
+              name: t('requirements.title'),
+              href: localizePath('/requirements', locale),
+            },
+            { slug: 'china', name: t('china.title'), href: localizePath('/china', locale) },
+          ],
+        },
+      ],
+    });
+  }
+
+  const scale = getGradeScale(slug);
+  if (scale) {
+    sections.push({
+      id: 'scale',
+      number: sectionNumber(sectionCount + sections.length),
+      label: t('section.scale.label'),
+      question: t('section.scale.question', { name }),
+      blocks: [
+        {
+          type: 'scale',
+          range: scale.range,
+          intro: scale.intro[locale],
+          rows: scale.rows.map((row) => ({ grade: row.grade, meaning: row.meaning[locale] })),
+          notes: (scale.notes ?? []).map((note) => note[locale]),
+          evidence: scale.sources
+            .map((source) => resolveSource(source))
+            .filter((source): source is ResolvedSource => source !== null)
+            .map((source) => ({ label: source.label, href: source.href })),
+          meta: `${scale.academicYear} · ${t('requirements.verifiedOn', { date: scale.verifiedAt })}`,
+        },
+      ],
+    });
+  }
+
+  return sections;
 }
 
 export interface ProfileContext {
@@ -187,6 +280,11 @@ export function buildSystemProfile(
 
   const sources = resolveSources(data.sources);
 
+  // 10 / official policy · 11 / reporting scale — reference data, sourced.
+  sections.push(
+    ...buildReferenceSections({ slug, locale, name, t, sectionCount: sections.length }),
+  );
+
   sections.push({
     id: 'sources',
     number: sectionNumber(sections.length),
@@ -301,6 +399,11 @@ export function buildExamProfile(
   }
 
   const sources = resolveSources(data.sources);
+
+  // 08 / official policy · 09 / reporting scale — reference data, sourced.
+  sections.push(
+    ...buildReferenceSections({ slug, locale, name, t, sectionCount: sections.length }),
+  );
 
   sections.push({
     id: 'sources',

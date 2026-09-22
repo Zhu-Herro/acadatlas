@@ -12,7 +12,7 @@ import FAQ from './FAQ.astro';
 import SourceList from './SourceList.astro';
 import SystemCompare from './SystemCompare.astro';
 import RelatedContent from './RelatedContent.astro';
-import type { Locale } from '@/i18n/utils';
+import { useTranslations, type Locale } from '@/i18n/utils';
 
 interface Props {
   section: ProfileSection;
@@ -23,6 +23,7 @@ interface Props {
 }
 
 const { section, view, locale, total } = Astro.props;
+const t = useTranslations(locale);
 const titleId = `${section.id}-title`;
 
 /** Narrow a union member inside the template without losing type safety. */
@@ -221,6 +222,61 @@ const is = <K extends ProfileBlock['type']>(block: ProfileBlock, type: K) =>
                     academicYear={view.academicYear}
                     region={view.region}
                   />
+                );
+              }
+
+              const scale = is(block, 'scale');
+              if (scale) {
+                return (
+                  <div class="flex flex-col gap-8">
+                    <p class="font-mono text-meta uppercase tracking-[0.16em] text-accent">{scale.range}</p>
+
+                    <p class="max-w-2xl text-body leading-relaxed text-charcoal">{scale.intro}</p>
+
+                    <!-- Grade ledger: mono grade + plain-language meaning -->
+                    <dl class="flex flex-col border-t border-rule">
+                      {scale.rows.map((row, index) => (
+                        <div
+                          data-reveal="up"
+                          style={`--reveal-delay:${index * 40}ms`}
+                          class="grid grid-cols-[minmax(0,7rem)_1fr] gap-x-6 gap-y-2 border-b border-rule py-4 sm:grid-cols-[minmax(0,10rem)_1fr] sm:gap-x-10"
+                        >
+                          <dt class="font-mono text-h4 tabnum text-ink">{row.grade}</dt>
+                          <dd class="text-caption leading-relaxed text-charcoal">{row.meaning}</dd>
+                        </div>
+                      ))}
+                    </dl>
+
+                    {scale.notes.length > 0 && (
+                      <ul class="flex flex-col gap-3 border-l border-accent pl-5">
+                        {scale.notes.map((note) => (
+                          <li class="max-w-2xl text-caption leading-relaxed text-graphite">{note}</li>
+                        ))}
+                      </ul>
+                    )}
+
+                    <!-- Provenance for this scale specifically -->
+                    <div class="flex flex-col gap-3 border-t border-rule pt-5">
+                      <p class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                        {t('requirements.source')}
+                      </p>
+                      <ul class="flex flex-wrap gap-x-6 gap-y-2">
+                        {scale.evidence.map((item) => (
+                          <li>
+                            <a
+                              href={item.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="link-underline font-mono text-micro uppercase tracking-[0.12em]"
+                            >
+                              {item.label} ↗
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                      <p class="font-mono text-micro text-mist">{scale.meta}</p>
+                    </div>
+                  </div>
                 );
               }
 

@@ -367,6 +367,71 @@ const zh = {
   '404.lede': '你访问的页面可能已被移动或移除。可以从下面的入口继续浏览。',
   '404.suggestions': '你可能想找',
 
+  // Official policy & grade scales (profile sections 10–11) ---------------
+  'section.policy.label': '官方政策',
+  'section.policy.question': '{name}的官方考试安排',
+  'section.scale.label': '分数与等级',
+  'section.scale.question': '{name}的成绩如何呈现？',
+  'section.requirements.label': '录取要求',
+  'section.requirements.question': '申请{name}相关的院校需要达到什么水平？',
+
+  // Navigation additions --------------------------------------------------
+  'nav.china': '内地升学',
+  'nav.requirements': '录取要求',
+
+  // Requirements hub ------------------------------------------------------
+  'requirements.title': '录取要求',
+  'requirements.lede':
+    '把「要考到什么水平才能申请哪所学校」这类问题，回答成可追溯的数据：每一条要求都标注适用学年、出处与核验状态。',
+  'requirements.statusVerified': '已核验',
+  'requirements.statusPending': '待核验',
+  'requirements.verifiedCount': '已核验 {count} 条',
+  'requirements.pendingCount': '待核验 {count} 条',
+  'requirements.methodTitle': '核验方法',
+  'requirements.methodBody':
+    '本页只收录可追溯到官方一手来源的要求，通常来自教育部公告、考试院公告或院校招生简章。每条记录都记录适用学年与核验日期，页面构建时会自动校验：标记为「已核验」但没有来源的条目会导致构建失败。',
+  'requirements.pendingExplain':
+    '标记为「待核验」的条目表示：我们知道这个数字确实存在，也明确知道它发布在哪里，但还没有完成核对录入。我们选择公开这个缺口，而不是填一个看起来合理的数字。',
+  'requirements.filterAll': '全部渠道',
+  'requirements.filterLabel': '按申请渠道筛选',
+  'requirements.systemFilter': '按体系筛选',
+  'requirements.allSystems': '全部体系',
+  'requirements.colScope': '适用范围',
+  'requirements.colInstitution': '院校 / 机构',
+  'requirements.colProgramme': '专业范围',
+  'requirements.colRequirement': '要求',
+  'requirements.colMeta': '适用学年 / 核验',
+  'requirements.source': '出处',
+  'requirements.verifiedOn': '核验于 {date}',
+  'requirements.noMatch': '当前筛选条件下没有记录。',
+  'requirements.pointerTitle': '去哪里核对一手数字',
+  'requirements.pointerBody':
+    '本页不代替官方渠道。以下入口是核对院校与课程级别数字的权威发布地。',
+  'requirements.officialNotice': '本页不提供任何未经核验的分数。',
+
+  // Mainland China routes page -------------------------------------------
+  'china.title': '中国内地升学',
+  'china.lede':
+    '对内地家庭来说，文凭试最关心的问题往往是「要考到多少分才能上内地哪所大学」。这个问题的正确回答方式，是先弄清两条官方渠道，再谈院校要求。',
+  'china.audience': '适用对象',
+  'china.summary': '概要',
+  'china.keyStandards': '关键标准',
+  'china.timeline': '官方流程与时间线',
+  'china.caveats': '需要注意',
+  'china.structuralTitle': '为什么不能直接换算成分数',
+  'china.structuralBody':
+    '内地高考是总分制，文凭试是等级制。内地高校招收文凭试学生计划因此采用「核心科目等级组合」设定最低标准，而不是把等级换算成总分——这是两套体系最容易被误解的差别。',
+  'china.referenceTitle': '一手出处',
+  'china.goRequirements': '查看录取要求总览',
+  'china.goCompare': '比较不同体系',
+  'china.disclaimerTitle': '关于本页的边界',
+  'china.disclaimer':
+    '本页只陈述官方公告中明确写出的标准与流程，不推测、不补齐、不换算。院校层面的实际录取分数通常高于最低标准，且逐年变动，请以院校当年招生章程与官方系统为准。',
+
+  // Integrity report ------------------------------------------------------
+  'integrity.title': '内容完整性报告',
+  'integrity.lede': '构建期自动生成的溯源检查结果，用于保证没有任何无来源的时效性内容被发布。',
+
   // Accessibility ----------------------------------------------------------
   'a11y.skip': '跳到主要内容',
   'a11y.decorative': '装饰性图形',
@@ -726,6 +791,72 @@ const en: Record<UIKey, string> = {
   '404.lede':
     'The page you requested may have been moved or removed. Continue from one of the entry points below.',
   '404.suggestions': 'You may be looking for',
+
+  // Official policy & grade scales (profile sections 10–11) ---------------
+  'section.policy.label': 'Official policy',
+  'section.policy.question': 'Official arrangements for {name}',
+  'section.scale.label': 'Scores & grades',
+  'section.scale.question': 'How does {name} report results?',
+  'section.requirements.label': 'Admission requirements',
+  'section.requirements.question': 'What is needed to apply to institutions accepting {name}?',
+
+  // Navigation additions --------------------------------------------------
+  'nav.china': 'Mainland routes',
+  'nav.requirements': 'Requirements',
+
+  // Requirements hub ------------------------------------------------------
+  'requirements.title': 'Admission requirements',
+  'requirements.lede':
+    'Answering "what score gets into which institution" as traceable data: every requirement carries its academic year, its source and its verification status.',
+  'requirements.statusVerified': 'Verified',
+  'requirements.statusPending': 'Pending',
+  'requirements.verifiedCount': '{count} verified',
+  'requirements.pendingCount': '{count} pending',
+  'requirements.methodTitle': 'How we verify',
+  'requirements.methodBody':
+    'Only requirements traceable to an official primary source are listed — typically a ministry notice, an examinations authority announcement or an institutional admissions charter. Every record carries an academic year and a verification date, and the build checks them automatically: a row marked "verified" without a source will fail the build.',
+  'requirements.pendingExplain':
+    'A "pending" row means we know the number exists and exactly where it is published, but it has not been retrieved and checked yet. We publish that gap rather than fill it with a plausible-sounding figure.',
+  'requirements.filterAll': 'All routes',
+  'requirements.filterLabel': 'Filter by admission route',
+  'requirements.systemFilter': 'Filter by system',
+  'requirements.allSystems': 'All systems',
+  'requirements.colScope': 'Applies to',
+  'requirements.colInstitution': 'Institution / body',
+  'requirements.colProgramme': 'Programmes',
+  'requirements.colRequirement': 'Requirement',
+  'requirements.colMeta': 'Year / verified',
+  'requirements.source': 'Source',
+  'requirements.verifiedOn': 'Verified {date}',
+  'requirements.noMatch': 'No records match the current filters.',
+  'requirements.pointerTitle': 'Where to verify a number yourself',
+  'requirements.pointerBody':
+    'This page does not replace official channels. The entry points below are where institution- and programme-level figures are authoritatively published.',
+  'requirements.officialNotice': 'This page publishes no unverified score.',
+
+  // Mainland China routes page -------------------------------------------
+  'china.title': 'Mainland China routes',
+  'china.lede':
+    'For families in mainland China, the first question about the DSE is usually "what score gets into which mainland university". The defensible answer starts with the two official routes, then moves to institution requirements.',
+  'china.audience': 'Who it is for',
+  'china.summary': 'Summary',
+  'china.keyStandards': 'Key standards',
+  'china.timeline': 'Official process and timeline',
+  'china.caveats': 'Worth knowing',
+  'china.structuralTitle': 'Why levels are not converted into a score',
+  'china.structuralBody':
+    'The gaokao is a total-score system; the DSE is a level-based one. The mainland admission scheme for DSE candidates therefore sets its minimum standard as a combination of core-subject LEVELS rather than converting levels into points — the single most misunderstood difference between the two systems.',
+  'china.referenceTitle': 'Primary sources',
+  'china.goRequirements': 'See the requirements hub',
+  'china.goCompare': 'Compare systems',
+  'china.disclaimerTitle': 'The boundary of this page',
+  'china.disclaimer':
+    'This page states only the standards and processes that official notices state explicitly. It does not extrapolate, fill gaps or convert. Actual institutional cut-offs are usually above the minimum standard and move year to year — the institution\u2019s current charter and the official systems are authoritative.',
+
+  // Integrity report ------------------------------------------------------
+  'integrity.title': 'Content integrity report',
+  'integrity.lede':
+    'A build-time provenance check, so that no unsourced time-sensitive claim can be published.',
 
   // Accessibility ----------------------------------------------------------
   'a11y.skip': 'Skip to main content',

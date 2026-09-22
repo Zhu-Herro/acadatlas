@@ -1,0 +1,397 @@
+---
+/**
+ * /requirements — the admission requirements hub.
+ *
+ * This is the page that answers "what score gets in". It answers it as
+ * traceable data: every row carries its academic year, its source and a
+ * verified / pending status, and `src/pages/integrity.json.ts` fails the build
+ * if a row claims verification without a source.
+ *
+ * Rendered as an editorial ledger rather than a data grid, so it stays in the
+ * site's type system and remains readable at 390px.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import { requirements, requirementRoutes, routeLabel } from '@/data/requirements';
+import { resolveSource } from '@/lib/sources';
+import { buildIntegrityReport } from '@/lib/integrity';
+import { verificationPointers } from '@/data/chinaRoutes';
+import { useTranslations, type Locale } from '@/i18n/utils';
+import { breadcrumbSchema, buildSeo } from '@/lib/seo';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+/** The build-time guard result — surfaced to the reader as a trust signal. */
+const integrity = buildIntegrityReport();
+
+/** Resolve each row's source once; drop rows whose source cannot be resolved. */
+const rows = requirements
+  .map((entry) => {
+    const source = resolveSource(entry.source);
+    return source ? { ...entry, resolvedSource: source } : null;
+  })
+  .filter((row): row is NonNullable<typeof row> => row !== null);
+
+const verified = rows.filter((row) => row.status === 'verified');
+const pending = rows.filter((row) => row.status === 'pending');
+
+/** Filters actually present in the data, so we never render a dead chip. */
+const activeRoutes = requirementRoutes.filter((route) =>
+  rows.some((row) => row.route === route.id),
+);
+
+const seo = buildSeo({
+  title: t('requirements.title'),
+  description: t('requirements.lede'),
+  locale,
+  path: '/requirements',
+  jsonLd: [
+    breadcrumbSchema(
+      [
+        { name: t('common.home'), path: '/' },
+        { name: t('requirements.title'), path: '/requirements' },
+      ],
+      locale,
+    ),
+  ],
+});
+---
+
+<BaseLayout locale={locale} seo={seo}>
+  <PageHeader
+    locale={locale}
+    number="09"
+    eyebrow={t('nav.requirements')}
+    title={[t('requirements.title')]}
+    lede={t('requirements.lede')}
+    crumbs={[
+      { name: t('common.home'), path: '/' },
+      { name: t('requirements.title'), path: '/requirements' },
+    ]}
+  >
+    <div slot="aside" class="mt-8 flex flex-col gap-3 border-t border-rule pt-5">
+      <p class="font-mono text-micro uppercase tracking-[0.14em] text-accent">
+        {t('requirements.verifiedCount', { count: integrity.counts.verified })}
+      </p>
+      {
+        integrity.counts.pending > 0 && (
+          <p class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+            {t('requirements.pendingCount', { count: integrity.counts.pending })}
+          </p>
+        )
+      }
+      <p class="max-w-xs text-caption leading-relaxed text-graphite">
+        {t('requirements.officialNotice')}
+      </p>
+    </div>
+  </PageHeader>
+
+  <!-- ── Method: how a number earns its place on this page ───────────── -->
+  <section class="edge-rule" aria-labelledby="method-title">
+    <div class="u-container py-14">
+      <div class="grid gap-10 lg:grid-cols-12 lg:gap-x-16">
+        <div class="lg:col-span-4">
+          <h2 id="method-title" data-reveal="fade" class="eyebrow eyebrow-accent">
+            {t('requirements.methodTitle')}
+          </h2>
+        </div>
+        <div class="lg:col-span-8 flex flex-col gap-6">
+          <p data-reveal="up" class="max-w-2xl text-body-lg leading-relaxed text-charcoal">
+            {t('requirements.methodBody')}
+          </p>
+          <p
+            data-reveal="up"
+            style="--reveal-delay:100ms"
+            class="max-w-2xl border-l border-accent pl-5 text-caption leading-relaxed text-graphite"
+          >
+            {t('requirements.pendingExplain')}
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Filters ─────────────────────────────────────────────────────── -->
+  <section class="edge-rule" aria-label={t('requirements.filterLabel')}>
+    <div class="u-container py-8">
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
+        <span class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+          {t('requirements.filterLabel')}
+        </span>
+        <button
+          type="button"
+          data-req-filter="all"
+          aria-pressed="true"
+          class="req-chip"
+        >
+          {t('requirements.filterAll')}
+        </button>
+        {
+          activeRoutes.map((route) => (
+            <button type="button" data-req-filter={route.id} aria-pressed="false" class="req-chip">
+              {route.label[locale]}
+            </button>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Verified ledger ─────────────────────────────────────────────── -->
+  <section class="edge-rule" aria-labelledby="verified-title">
+    <div class="u-container u-section">
+      <div class="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-3">
+        <h2 id="verified-title" data-reveal="fade" class="eyebrow eyebrow-accent">
+          {t('requirements.statusVerified')}
+        </h2>
+        <p class="meta-mono text-mist">{String(verified.length).padStart(2, '0')}</p>
+      </div>
+
+      <ol class="mt-12 flex flex-col border-t border-rule" data-req-list>
+        {
+          verified.map((row, index) => (
+            <li
+              data-req-row
+              data-route={row.route}
+              class="border-b border-rule"
+              data-reveal="up"
+              style={`--reveal-delay:${(index % 6) * 40}ms`}
+            >
+              <article class="grid gap-x-10 gap-y-5 py-8 lg:grid-cols-[3.5rem_minmax(0,1fr)]">
+                <span class="font-mono text-meta text-accent tabnum">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+
+                <div class="flex flex-col gap-5">
+                  <!-- Route + scope line -->
+                  <div class="flex flex-wrap items-baseline gap-x-5 gap-y-2">
+                    <span class="border border-accent px-2 py-0.5 font-mono text-micro uppercase tracking-[0.14em] text-accent">
+                      {routeLabel(row.route)[locale]}
+                    </span>
+                    <span class="font-mono text-micro uppercase tracking-[0.14em] text-graphite">
+                      {row.scope[locale]}
+                    </span>
+                  </div>
+
+                  <div class="grid gap-x-10 gap-y-3 lg:grid-cols-[minmax(0,14rem)_1fr]">
+                    <div class="flex flex-col gap-1.5">
+                      <span class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                        {t('requirements.colInstitution')}
+                      </span>
+                      <span class="text-h4 leading-snug text-ink">{row.institution[locale]}</span>
+                      <span class="text-caption text-graphite">{row.programme[locale]}</span>
+                    </div>
+
+                    <div class="flex flex-col gap-3">
+                      <span class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                        {t('requirements.colRequirement')}
+                      </span>
+                      <p class="max-w-2xl border-l-2 border-accent pl-4 text-body-lg leading-relaxed text-ink">
+                        {row.requirement[locale]}
+                      </p>
+                      {row.note && (
+                        <p class="max-w-2xl text-caption leading-relaxed text-graphite">
+                          {row.note[locale]}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <!-- Provenance -->
+                  <div class="flex flex-wrap items-baseline gap-x-8 gap-y-3 border-t border-rule pt-4">
+                    <span class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                      {t('requirements.source')}
+                    </span>
+                    <a
+                      href={row.resolvedSource.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="link-underline font-mono text-micro uppercase tracking-[0.12em]"
+                    >
+                      {row.resolvedSource.label} ↗
+                    </a>
+                    <span class="font-mono text-micro text-mist">
+                      {row.academicYear}
+                      {row.verifiedAt && ` · ${t('requirements.verifiedOn', { date: row.verifiedAt })}`}
+                    </span>
+                  </div>
+                </div>
+              </article>
+            </li>
+          ))
+        }
+      </ol>
+
+      <p data-req-empty hidden class="border-t border-rule pt-10 text-caption text-graphite">
+        {t('requirements.noMatch')}
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Pending ledger: the visible gap, not a hidden one ───────────── -->
+  {
+    pending.length > 0 && (
+      <section class="edge-rule" aria-labelledby="pending-title">
+        <div class="u-container u-section">
+          <div class="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-3">
+            <h2 id="pending-title" data-reveal="fade" class="eyebrow">
+              {t('requirements.statusPending')}
+            </h2>
+            <p class="meta-mono text-mist">{String(pending.length).padStart(2, '0')}</p>
+          </div>
+
+          <ul class="mt-12 flex flex-col border-t border-dashed border-rule">
+            {pending.map((row) => (
+              <li
+                data-req-row
+                data-route={row.route}
+                class="border-b border-dashed border-rule"
+                data-reveal="up"
+              >
+                <div class="grid gap-x-10 gap-y-4 py-7 lg:grid-cols-[minmax(0,16rem)_1fr]">
+                  <div class="flex flex-col gap-2">
+                    <span class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                      {routeLabel(row.route)[locale]}
+                    </span>
+                    <span class="text-h4 leading-snug text-graphite">
+                      {row.institution[locale]}
+                    </span>
+                  </div>
+                  <div class="flex flex-col gap-3">
+                    <p class="max-w-2xl text-caption leading-relaxed text-graphite">
+                      {row.requirement[locale]}
+                    </p>
+                    <a
+                      href={row.resolvedSource.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="link-underline self-start font-mono text-micro uppercase tracking-[0.12em]"
+                    >
+                      {row.resolvedSource.label} ↗
+                    </a>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- ── Where to verify a number yourself ──────────────────────────── -->
+  <section class="edge-rule" aria-labelledby="pointers-title">
+    <div class="u-container u-section">
+      <div class="grid gap-12 lg:grid-cols-12 lg:gap-x-16">
+        <div class="lg:col-span-4">
+          <h2 id="pointers-title" data-reveal="fade" class="eyebrow eyebrow-accent">
+            {t('requirements.pointerTitle')}
+          </h2>
+          <p data-reveal="up" class="mt-6 max-w-xs text-caption leading-relaxed text-graphite">
+            {t('requirements.pointerBody')}
+          </p>
+        </div>
+
+        <div class="lg:col-span-8">
+          <ul class="flex flex-col border-t border-rule">
+            {
+              verificationPointers.map((pointer, index) => (
+                <li class="border-b border-rule" data-reveal="up" style={`--reveal-delay:${index * 50}ms`}>
+                  <a
+                    href={pointer.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="group flex flex-col gap-2 py-6"
+                  >
+                    <span class="flex items-baseline justify-between gap-6">
+                      <span class="text-h4 text-ink transition-colors duration-300 group-hover:text-accent">
+                        {pointer.label[locale]}
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        class="font-mono text-caption text-mist transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent"
+                      >
+                        ↗
+                      </span>
+                    </span>
+                    <span class="max-w-2xl text-caption leading-relaxed text-graphite">
+                      {pointer.description[locale]}
+                    </span>
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+
+          <p class="mt-10 flex flex-wrap items-baseline gap-x-8 gap-y-3">
+            <a href={locale === 'zh' ? '/china' : '/en/china'} class="link-underline font-mono text-micro uppercase tracking-[0.16em]">
+              {t('china.title')} →
+            </a>
+            <a href={locale === 'zh' ? '/guides' : '/en/guides'} class="link-underline font-mono text-micro uppercase tracking-[0.16em]">
+              {t('guides.title')} →
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .req-chip {
+    border: 1px solid var(--color-rule);
+    padding: 0.5rem 0.85rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-graphite);
+    transition: border-color 0.3s var(--ease-editorial), color 0.3s var(--ease-editorial);
+  }
+
+  .req-chip:hover {
+    border-color: var(--color-ink);
+    color: var(--color-ink);
+  }
+
+  .req-chip[aria-pressed='true'] {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+</style>
+
+<script>
+  /**
+   * Route filter. Deliberately client-side and trivial: the whole ledger is in
+   * the HTML, so the page is fully readable and crawlable without JavaScript —
+   * filtering is a convenience, not a requirement.
+   */
+  const chips = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-req-filter]'));
+  const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-req-row]'));
+  const empty = document.querySelector<HTMLElement>('[data-req-empty]');
+
+  function apply(route: string): void {
+    let visible = 0;
+
+    for (const row of rows) {
+      const show = route === 'all' || row.dataset.route === route;
+      row.hidden = !show;
+      if (show) visible += 1;
+    }
+
+    for (const chip of chips) {
+      chip.setAttribute('aria-pressed', String(chip.dataset.reqFilter === route));
+    }
+
+    if (empty) empty.hidden = visible > 0;
+  }
+
+  for (const chip of chips) {
+    chip.addEventListener('click', () => apply(chip.dataset.reqFilter ?? 'all'));
+  }
+</script>

@@ -143,6 +143,31 @@ export const officialBodies: Record<string, SourceLink> = {
     label: '中国留学服务中心 (CSCSE)',
     href: 'https://www.cscse.edu.cn/',
   },
+
+  /* ── Mainland China admission routes for Hong Kong students ─────────
+     These four sources are the authoritative chain for the two official
+     routes: the MOE DSE admission scheme and the national joint
+     enrolment examination (全国联招). */
+  moeDseScheme: {
+    label: '教育部《内地高校招收香港中学文凭考试学生办法》',
+    href: 'https://www.moe.gov.cn/s78/A20/tongzhi/gangaotai/202511/t20251103_1418909.html',
+    note: '最低录取标准「3、3、2、A」、校长推荐计划、艺体类与残障考生标准的官方出处。',
+  },
+  edbMainland: {
+    label: '香港教育局 — 内地高校招收文凭试学生计划',
+    href: 'https://www.edb.gov.hk/tc/edu-system/postsecondary/policy-doc/pilot-scheme.html',
+    note: '参与院校名单、专业目录与计划指南的香港官方发布渠道。',
+  },
+  gdEea: {
+    label: '广东省教育考试院（联招办公告发布渠道）',
+    href: 'http://eea.gd.gov.cn/',
+    note: '全国联招各批次录取最低分数线等公告的发布渠道。',
+  },
+  hkmslq: {
+    label: '香港文凭试招生录取系统（内地高校）',
+    href: 'https://www.eeagd.edu.cn/hkmslq/ks/',
+    note: '考生查询录取结果的官方系统。',
+  },
 };
 
 export type Site = typeof site;
