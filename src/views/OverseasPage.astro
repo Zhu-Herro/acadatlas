@@ -1,0 +1,214 @@
+---
+/**
+ * /admissions/overseas — 境外升学.
+ *
+ * The symmetric counterpart to /admissions/mainland. Where the mainland page
+ * publishes official level standards, this page explains SELECTION MODELS:
+ * centralised platform, holistic review, or published conversion scale.
+ *
+ * No cut-off scores appear here by design — they are institution- and
+ * programme-specific and belong in the requirements ledger once verified.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import { overseasDestinations } from '@/data/overseas';
+import { routes } from '@/data/routes';
+import { resolveSources } from '@/lib/sources';
+import { localizePath, useTranslations, type Locale } from '@/i18n/utils';
+import { breadcrumbSchema, buildSeo } from '@/lib/seo';
+import { inLocale, entrySlug } from '@/lib/content';
+import { getCollection } from 'astro:content';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const systems = inLocale(await getCollection('systems'), locale);
+const systemName = (slug: string) =>
+  systems.find((entry) => entrySlug(entry) === slug)?.data.shortName ?? slug.toUpperCase();
+
+const seo = buildSeo({
+  title: t('overseas.title'),
+  description: t('overseas.lede'),
+  locale,
+  path: routes.overseas,
+  jsonLd: [
+    breadcrumbSchema(
+      [
+        { name: t('common.home'), path: routes.home },
+        { name: t('admissions.title'), path: routes.admissions },
+        { name: t('overseas.title'), path: routes.overseas },
+      ],
+      locale,
+    ),
+  ],
+});
+---
+
+<BaseLayout locale={locale} seo={seo}>
+  <PageHeader
+    locale={locale}
+    number="03.3"
+    eyebrow={t('nav.admissions')}
+    title={[t('overseas.title')]}
+    lede={t('overseas.lede')}
+    crumbs={[
+      { name: t('common.home'), path: routes.home },
+      { name: t('admissions.title'), path: routes.admissions },
+      { name: t('overseas.title'), path: routes.overseas },
+    ]}
+  />
+
+  <!-- ── The structural caveat, stated before any destination ───────── -->
+  <section class="edge-rule">
+    <div class="u-container py-12">
+      <p
+        data-reveal="fade"
+        class="max-w-3xl border-l border-accent pl-5 text-caption leading-relaxed text-graphite"
+      >
+        {t('overseas.structuralNote')}
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Destinations ───────────────────────────────────────────────── -->
+  <section class="edge-rule" aria-labelledby="destinations-title">
+    <div class="u-container u-section">
+      <h2 id="destinations-title" data-reveal="fade" class="eyebrow eyebrow-accent">
+        {t('pathways.destinations')}
+      </h2>
+
+      <ol class="mt-14 flex flex-col">
+        {
+          overseasDestinations.map((destination, index) => {
+            const sources = resolveSources(destination.sources);
+
+            return (
+              <li
+                id={destination.id}
+                class="scroll-mt-28 border-t border-rule py-10"
+                data-reveal="up"
+                style={`--reveal-delay:${(index % 4) * 50}ms`}
+              >
+                <div class="grid gap-8 lg:grid-cols-[3.5rem_minmax(0,15rem)_minmax(0,1fr)] lg:gap-x-10">
+                  <span class="font-mono text-meta text-accent tabnum">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+
+                  <div class="flex flex-col gap-3">
+                    <h3 class="font-display text-h3 text-ink">{destination.name[locale]}</h3>
+                    <p class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                      {destination.group[locale]}
+                    </p>
+                    <ul class="mt-2 flex flex-wrap gap-x-4 gap-y-2">
+                      {destination.systems.map((slug) => (
+                        <li>
+                          <a
+                            href={localizePath(routes.system(slug), locale)}
+                            class="link-underline font-mono text-micro uppercase tracking-[0.14em]"
+                          >
+                            {systemName(slug)}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div class="flex flex-col gap-7">
+                    <div>
+                      <h4 class="font-mono text-micro uppercase tracking-[0.14em] text-accent">
+                        {t('overseas.route')}
+                      </h4>
+                      <p class="mt-3 max-w-2xl text-body leading-relaxed text-charcoal">
+                        {destination.selectionModel[locale]}
+                      </p>
+                    </div>
+
+                    <div class="grid gap-6 sm:grid-cols-2">
+                      <div class="border-t border-rule pt-4">
+                        <h4 class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                          {t('overseas.focus')}
+                        </h4>
+                        <p class="mt-3 text-caption leading-relaxed text-graphite">
+                          {destination.focus[locale]}
+                        </p>
+                      </div>
+                      <div class="border-t border-rule pt-4">
+                        <h4 class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                          {t('overseas.timing')}
+                        </h4>
+                        <p class="mt-3 text-caption leading-relaxed text-graphite">
+                          {destination.timing[locale]}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-baseline gap-x-7 gap-y-3 border-t border-rule pt-4">
+                      <span class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                        {t('overseas.verify')}
+                      </span>
+                      {sources.map((source) => (
+                        <a
+                          href={source.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="link-underline font-mono text-micro uppercase tracking-[0.12em]"
+                        >
+                          {source.label} ↗
+                        </a>
+                      ))}
+                      <span class="font-mono text-micro text-mist">
+                        {destination.academicYear} · {t('requirements.verifiedOn', { date: destination.verifiedAt })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            );
+          })
+        }
+      </ol>
+    </div>
+  </section>
+
+  <!-- ── Roadmap ────────────────────────────────────────────────────── -->
+  <section class="edge-rule" aria-labelledby="overseas-roadmap">
+    <div class="u-container u-section">
+      <div class="grid gap-12 lg:grid-cols-12 lg:gap-x-16">
+        <div class="lg:col-span-4">
+          <h2 id="overseas-roadmap" data-reveal="fade" class="eyebrow">
+            {t('overseas.roadmapTitle')}
+          </h2>
+        </div>
+        <div class="lg:col-span-8">
+          <p data-reveal="up" class="max-w-2xl text-body leading-relaxed text-charcoal">
+            {t('overseas.roadmapBody')}
+          </p>
+          <p class="mt-10 flex flex-wrap items-baseline gap-x-8 gap-y-3">
+            <a
+              href={localizePath(routes.requirements, locale)}
+              class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
+            >
+              {t('requirements.title')} →
+            </a>
+            <a
+              href={localizePath(routes.pathways, locale)}
+              class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
+            >
+              {t('pathways.title')} →
+            </a>
+            <a
+              href={localizePath(routes.mainland, locale)}
+              class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
+            >
+              {t('nav.china')} →
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

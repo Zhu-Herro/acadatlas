@@ -43,14 +43,16 @@ EducationWeb/
     │   ├── exams/{zh,en}/       sat · act · ielts · toefl
     │   └── guides/{zh,en}/      7 篇长文
     ├── data/                 # 展示与领域数据（含多语言文案）
-    │   ├── navigation.ts       导航模型（header / drawer / footer / 静态页）
+    │   ├── routes.ts        ★ 路由与板块注册表（全站链接与导航的唯一来源）
+    │   ├── navigation.ts       导航派生（footer 分组 / 搜索索引用的静态页清单）
     │   ├── dimensions.ts       9 个比较维度定义
     │   ├── pathways.ts         升学目的地登记表
     │   ├── educationChain.ts   教育链条 6 个环节
     │   ├── policies.ts      ★ 各体系官方报考与评核安排（带出处）
     │   ├── scales.ts        ★ 全部评分与等级体系（带出处）
     │   ├── requirements.ts  ★ 录取要求数据底座（verified / pending）
-    │   └── chinaRoutes.ts   ★ 中国内地两条官方升学渠道
+    │   ├── chinaRoutes.ts   ★ 中国内地两条官方升学渠道
+    │   └── overseas.ts      ★ 境外 6 个目的地的录取方式（不含分数）
     ├── i18n/
     │   ├── ui.ts             # ★ UI 字典（zh 为键集合的唯一来源，en 必须完整镜像）
     │   └── utils.ts          # 路由本地化、翻译器、日期格式化
@@ -80,18 +82,35 @@ EducationWeb/
 
 ## 3. 已完成页面
 
-默认语言（中文，无前缀）与英文（`/en/` 前缀）**双份**，共 **56 个静态页面**。
+默认语言（中文，无前缀）与英文（`/en/` 前缀）**双份**，共 **60 个静态页面**。
+
+**信息架构（5 个大板块 + 二级模块）** —— 定义在 `src/data/routes.ts`，导航、首页叙事、面包屑、搜索索引全部由它派生：
+
+```
+01 教育体系  /systems          → 体系详情 · 体系比较 /compare
+02 考试      /exams            → 入学标准化考试 · 语言测试
+03 升学      /admissions       → 03.1 升学路径   /admissions/pathways
+                                 03.2 内地升学   /admissions/mainland
+                                 03.3 境外升学   /admissions/overseas
+                                 03.4 录取要求   /admissions/requirements
+04 教育指南  /guides           → 专栏分类
+05 资源中心  /resources        → 官方来源索引 · 规划中的下载与课程
+```
+
+二级层级通过 `SectionNav` 组件在页头下方呈现（不是下拉菜单），因此顶部导航只需 5 项，保持极简。移动端抽屉里以同样的两级结构展开。
 
 | 路由 | 说明 |
 | --- | --- |
-| `/` · `/en/` | 首页：Hero → 引言 → 01 教育体系 → 教育地图 → 02 探索体系 → 03 升学路径 → 04 指南 → 05 探索（搜索）→ 结语 |
+| `/` · `/en/` | 首页：Hero → 引言（含五板块目录）→ 01 教育体系 → 02 考试 → 03 升学（两条主线 + 四个模块 + 路径图）→ 04 教育指南 → 05 资源中心 → 搜索 → 结语 |
 | `/systems` · `/en/systems` | 体系总览 + 四类信息架构说明 |
 | `/systems/dse` `/ib` `/ap` `/a-level` `/igcse` | 体系详情（统一 01–09 模板 + 关联体系） |
 | `/exams` · `/en/exams` | 考试体系（按「入学标准化考试 / 语言测试」分组） |
 | `/exams/sat` `/act` `/ielts` `/toefl` | 考试详情（复用同一模板，01–08） |
-| `/pathways` · `/en/pathways` | 升学路径：路径关系图 + 7 个目的地 |
-| `/china` · `/en/china` | **中国内地升学**：两条官方渠道 + 关键标准 + 官方时间线 + 一手出处 |
-| `/requirements` · `/en/requirements` | **录取要求中枢**：已核验数据台帐（可筛选）+ 待核验缺口 + 官方核对入口 + 核验方法 |
+| `/admissions` · `/en/admissions` | **升学板块总览**：两条主线（内地／境外）+ 四个模块 + 分数处理原则 + 路线图 |
+| `/admissions/pathways` | 升学路径：体系↔目的地路径关系图 + 7 个目的地 |
+| `/admissions/mainland` | **中国内地升学**：两条官方渠道 + 关键标准 + 官方时间线 + 一手出处 |
+| `/admissions/overseas` | **境外升学**：6 个目的地的录取方式、评估侧重、时间结构与官方核对入口 |
+| `/admissions/requirements` | **录取要求台帐**：已核验数据（可筛选）+ 待核验缺口 + 官方核对入口 + 核验方法 |
 | `/guides` · `/en/guides` | 教育指南（分类区块 + 精选） |
 | `/guides/{7 篇}` | 文章页：分类 → 超大标题 → 元信息 → 生成式视觉 → 目录 → 正文 → 来源 → 相关 |
 | `/compare` · `/en/compare` | 比较工具（2–4 体系，9 维度，可展开，URL 可分享） |

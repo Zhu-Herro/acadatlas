@@ -29,12 +29,13 @@ const seo = buildSeo({
   title: t('pathways.title'),
   description: t('pathways.lede'),
   locale,
-  path: '/pathways',
+  path: '/admissions/pathways',
   jsonLd: [
     breadcrumbSchema(
       [
         { name: t('common.home'), path: '/' },
-        { name: t('pathways.title'), path: '/pathways' },
+        { name: t('admissions.title'), path: '/admissions' },
+        { name: t('pathways.title'), path: '/admissions/pathways' },
       ],
       locale,
     ),
@@ -45,13 +46,14 @@ const seo = buildSeo({
 <BaseLayout locale={locale} seo={seo}>
   <PageHeader
     locale={locale}
-    number="03"
-    eyebrow={t('pathways.title')}
+    number="03.1"
+    eyebrow={t('nav.admissions')}
     title={[t('pathways.title')]}
     lede={t('pathways.lede')}
     crumbs={[
       { name: t('common.home'), path: '/' },
-      { name: t('pathways.title'), path: '/pathways' },
+      { name: t('admissions.title'), path: '/admissions' },
+      { name: t('pathways.title'), path: '/admissions/pathways' },
     ]}
   />
 

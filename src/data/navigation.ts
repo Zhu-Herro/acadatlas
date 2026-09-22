@@ -1,76 +1,60 @@
 /**
  * ─────────────────────────────────────────────────────────────────────────────
- * NAVIGATION MODEL
+ * NAVIGATION
  * ─────────────────────────────────────────────────────────────────────────────
- * Centralised so the header, the mobile drawer, the footer and the 404 page
- * can never drift apart. Paths are locale-agnostic — `localizePath()` adds the
- * `/en` prefix at render time.
+ * Derived from the section model in `src/data/routes.ts` — this file only adds
+ * the footer grouping and the static-page list used by the search index.
+ *
+ * Nothing here hard-codes a path: every href comes from `routes`.
  */
 
 import type { UIKey } from '@/i18n/ui';
+import { primaryNav, routes, secondaryNav, sections } from './routes';
 
 export interface NavItem {
   key: UIKey;
-  /** Locale-agnostic href. */
   href: string;
   /** Rendered smaller / secondary in the footer. */
   secondary?: boolean;
 }
 
-/**
- * Main header navigation. Kept at six items so it stays legible.
- *
- * Ordering reflects what a reader actually needs, in sequence:
- * what the systems are → how they are examined → where they lead →
- * the mainland-specific route → the numbers → the long-form reading.
- */
-export const primaryNav: NavItem[] = [
-  { key: 'nav.systems', href: '/systems' },
-  { key: 'nav.exams', href: '/exams' },
-  { key: 'nav.pathways', href: '/pathways' },
-  { key: 'nav.china', href: '/china' },
-  { key: 'nav.requirements', href: '/requirements' },
-  { key: 'nav.guides', href: '/guides' },
-];
+export { primaryNav, secondaryNav, sections };
 
-/** Reachable from the footer and the mobile drawer only. */
-export const secondaryNav: NavItem[] = [
-  { key: 'nav.resources', href: '/resources' },
-  { key: 'nav.compare', href: '/compare' },
-  { key: 'nav.about', href: '/about' },
-  { key: 'nav.contact', href: '/contact' },
-];
+/** Footer column: the five sections, in reading order. */
+export const footerBrowse: NavItem[] = sections.map((section) => ({
+  key: section.key,
+  href: section.href,
+}));
 
-/** Footer column: browse. */
-export const footerBrowse: NavItem[] = [
-  { key: 'nav.systems', href: '/systems' },
-  { key: 'nav.exams', href: '/exams' },
-  { key: 'nav.pathways', href: '/pathways' },
-  { key: 'nav.guides', href: '/guides' },
-  { key: 'nav.resources', href: '/resources' },
-];
+/** Footer column: the admission modules, surfaced one level deeper so the
+ *  hierarchy is visible from any page without opening the section hub. */
+export const footerAdmissions: NavItem[] = (
+  sections.find((section) => section.id === 'admissions')?.children ?? []
+).map((child) => ({ key: child.key, href: child.href }));
 
 /** Footer column: about. */
 export const footerAbout: NavItem[] = [
-  { key: 'nav.compare', href: '/compare' },
-  { key: 'nav.about', href: '/about' },
-  { key: 'nav.contact', href: '/contact' },
+  { key: 'nav.compare', href: routes.compare },
+  { key: 'nav.about', href: routes.about },
+  { key: 'nav.contact', href: routes.contact },
 ];
 
 /**
- * Static pages that should appear in search and in the sitemap even though they
- * are not content-collection entries.
+ * Every static page, across all sections plus the admission sub-modules.
+ * Consumed by the search index so a query like "录取要求" resolves.
  */
 export const staticPages: NavItem[] = [
-  { key: 'nav.home', href: '/' },
-  { key: 'nav.systems', href: '/systems' },
-  { key: 'nav.exams', href: '/exams' },
-  { key: 'nav.pathways', href: '/pathways' },
-  { key: 'nav.china', href: '/china' },
-  { key: 'nav.requirements', href: '/requirements' },
-  { key: 'nav.guides', href: '/guides' },
-  { key: 'nav.resources', href: '/resources' },
-  { key: 'nav.compare', href: '/compare' },
-  { key: 'nav.about', href: '/about' },
-  { key: 'nav.contact', href: '/contact' },
+  { key: 'nav.home', href: routes.home },
+  { key: 'nav.systems', href: routes.systems },
+  { key: 'nav.exams', href: routes.exams },
+  { key: 'nav.admissions', href: routes.admissions },
+  { key: 'nav.pathways', href: routes.pathways },
+  { key: 'nav.china', href: routes.mainland },
+  { key: 'nav.overseas', href: routes.overseas },
+  { key: 'nav.requirements', href: routes.requirements },
+  { key: 'nav.guides', href: routes.guides },
+  { key: 'nav.resources', href: routes.resources },
+  { key: 'nav.compare', href: routes.compare },
+  { key: 'nav.about', href: routes.about },
+  { key: 'nav.contact', href: routes.contact },
 ];

@@ -1,0 +1,16 @@
+# Permanent redirects.
+#
+# The admissions modules were flattened in the first release
+# (/pathways, /china, /requirements) and were reorganised into a single
+# admissions section with sub-paths. These 301s keep any link that was already
+# shared working, and pass the ranking signal to the new URL.
+#
+# Reference: https://docs.netlify.com/routing/redirects/
+
+/pathways                      /admissions/pathways          301!
+/china                         /admissions/mainland          301!
+/requirements                  /admissions/requirements      301!
+
+/en/pathways                   /en/admissions/pathways       301!
+/en/china                      /en/admissions/mainland       301!
+/en/requirements               /en/admissions/requirements   301!

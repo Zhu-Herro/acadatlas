@@ -16,6 +16,7 @@ import { getPathway, pathwayAnchor } from '@/data/pathways';
 import { comparisonKeys, type ComparisonKey } from '@/data/dimensions';
 import { getGradeScale } from '@/data/scales';
 import { getPolicy } from '@/data/policies';
+import { routes } from '@/data/routes';
 import { createLinker, entrySlug, type EntryLink } from './content';
 import { resolveSource, resolveSources, type ResolvedSource } from './sources';
 import type { Translator } from '@/i18n/utils';
@@ -129,9 +130,9 @@ function buildReferenceSections(options: {
             {
               slug: 'requirements',
               name: t('requirements.title'),
-              href: localizePath('/requirements', locale),
+              href: localizePath(routes.requirements, locale),
             },
-            { slug: 'china', name: t('china.title'), href: localizePath('/china', locale) },
+            { slug: 'mainland', name: t('china.title'), href: localizePath(routes.mainland, locale) },
           ],
         },
       ],
@@ -322,7 +323,7 @@ export function buildSystemProfile(
     sources,
     faq: data.faq,
     sections,
-    compareHref: `${localizePath('/compare', locale)}?systems=${[slug, ...compareTargets.slice(0, 1).map((target) => target.slug)].join(',')}`,
+    compareHref: `${localizePath(routes.compare, locale)}?systems=${[slug, ...compareTargets.slice(0, 1).map((target) => target.slug)].join(',')}`,
     compareTargets,
   };
 }
@@ -468,7 +469,7 @@ export function toComparisonRecord(
     name: entry.data.title,
     shortName: entry.data.shortName,
     fullName: entry.data.fullName,
-    href: localizePath(`/systems/${slug}`, locale),
+    href: localizePath(routes.system(slug), locale),
     values,
   };
 }

@@ -1,0 +1,78 @@
+---
+/**
+ * SectionNav — the second level of the information architecture.
+ *
+ * Rendered directly under a section's page header. It answers "where am I, and
+ * what else is in this section?" without adding a dropdown to the global
+ * header, which keeps the top bar at five clean items (brief, section 16).
+ *
+ * Numbering is hierarchical (`03` → `03.1`, `03.2`…) so the reader can see the
+ * structure, not just the labels. Purely typographic: hairlines, mono numerals,
+ * no cards, no shadows.
+ */
+import { findSection } from '@/data/routes';
+import { localizePath, stripLocale, useTranslations, type Locale } from '@/i18n/utils';
+
+interface Props {
+  locale: Locale;
+  /** Current path, locale-stripped. Defaults to the request path. */
+  path?: string;
+}
+
+const { locale, path } = Astro.props;
+const t = useTranslations(locale);
+
+const current = path ?? stripLocale(Astro.url.pathname);
+const section = findSection(current);
+
+/** Children worth showing: more than one, otherwise the strip is noise. */
+const children = section?.children ?? [];
+const showChildren = children.length > 1;
+---
+
+{
+  section && showChildren && (
+    <nav class="edge-rule" aria-label={`${t('nav.breadcrumb')} — ${t('sectionNav.label')}`}>
+      <div class="u-container py-6">
+        <ol class="flex flex-wrap items-baseline gap-x-7 gap-y-3">
+          <li class="flex items-baseline gap-2.5">
+            <span class="font-mono text-micro text-accent tabnum">{section.number}</span>
+            <span class="font-mono text-micro uppercase tracking-[0.14em] text-graphite">
+              {t(section.key)}
+            </span>
+          </li>
+
+          {children.map((child, index) => {
+            const isRoot = child.href === section.href;
+            const isActive = isRoot
+              ? current === section.href
+              : current === child.href || current.startsWith(`${child.href}/`);
+
+            return (
+              <li class="flex items-baseline gap-2.5">
+                <span aria-hidden="true" class="font-mono text-micro text-rule">
+                  /
+                </span>
+                <a
+                  href={localizePath(child.href, locale)}
+                  aria-current={isActive ? 'page' : undefined}
+                  class:list={[
+                    'font-mono text-micro uppercase tracking-[0.14em] transition-colors duration-300',
+                    isActive ? 'text-ink' : 'text-mist hover:text-accent',
+                  ]}
+                >
+                  {t(child.key)}
+                </a>
+                {!isRoot && (
+                  <span class="font-mono text-micro text-rule tabnum">
+                    {section.number}.{index}
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    </nav>
+  )
+}

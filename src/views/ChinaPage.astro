@@ -30,12 +30,13 @@ const seo = buildSeo({
   title: t('china.title'),
   description: t('china.lede'),
   locale,
-  path: '/china',
+  path: '/admissions/mainland',
   jsonLd: [
     breadcrumbSchema(
       [
         { name: t('common.home'), path: '/' },
-        { name: t('china.title'), path: '/china' },
+        { name: t('admissions.title'), path: '/admissions' },
+        { name: t('china.title'), path: '/admissions/mainland' },
       ],
       locale,
     ),
@@ -46,13 +47,14 @@ const seo = buildSeo({
 <BaseLayout locale={locale} seo={seo}>
   <PageHeader
     locale={locale}
-    number="10"
-    eyebrow={t('nav.china')}
+    number="03.2"
+    eyebrow={t('nav.admissions')}
     title={[t('china.title')]}
     lede={t('china.lede')}
     crumbs={[
       { name: t('common.home'), path: '/' },
-      { name: t('china.title'), path: '/china' },
+      { name: t('admissions.title'), path: '/admissions' },
+      { name: t('china.title'), path: '/admissions/mainland' },
     ]}
   />
 
@@ -271,7 +273,7 @@ const seo = buildSeo({
 
           <p class="mt-10">
             <a
-              href={localizePath('/requirements', locale)}
+              href={localizePath('/admissions/requirements', locale)}
               class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
             >
               {t('china.goRequirements')} →

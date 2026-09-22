@@ -122,6 +122,8 @@ const zh = {
   'home.s1.title2': '不同的路径。',
   'home.s1.body':
     '不同的体系拥有不同的结构、评估方式与升学方向。我们用统一的框架整理它们，让差异可以被并排比较，而不是被印象决定。',
+  'home.s2exams.title1': '考试是评估，',
+  'home.s2exams.title2': '不是课程。',
   'home.s2.label': '教育地图',
   'home.s2.title': '从学生，到未来。',
   'home.s2.body':
@@ -378,6 +380,69 @@ const zh = {
   // Navigation additions --------------------------------------------------
   'nav.china': '内地升学',
   'nav.requirements': '录取要求',
+  'nav.admissions': '升学',
+  'nav.overseas': '境外升学',
+
+  // Section navigation & section hub notes --------------------------------
+  'sectionNav.label': '本板块',
+  'sectionNote.systemsOverview': '逐个介绍各国际课程体系的结构、评估与升学方向。',
+  'sectionNote.compare': '把 2–4 个体系放在同一组维度上并排比较。',
+  'sectionNote.examsOverview': '区分入学标准化考试与语言测试，说明它们与课程体系的关系。',
+  'sectionNote.pathways': '不同教育体系与全球升学目的地之间的路径关系。',
+  'sectionNote.mainland': '内地大学的两条官方升学渠道、关键标准与官方时间线。',
+  'sectionNote.overseas': '香港、英国、美国、加拿大、澳大利亚、新加坡的录取方式与评估侧重。',
+  'sectionNote.requirements': '可追溯的录取要求台帐：每条都带适用学年、出处与核验状态。',
+  'sectionNote.guides': '围绕考生与家长最关心的问题整理的专栏内容。',
+  'sectionNote.resources': '官方机构与公开来源索引，以及将陆续上线的资料与课程。',
+
+  // Admissions section hub ------------------------------------------------
+  'admissions.title': '升学',
+  'admissions.lede':
+    '从「去哪里」到「要考多少」——升学不是一次性选择，而是一条包含两条主线、四个模块的链条。',
+  'admissions.tracksTitle': '两条主线',
+  'admissions.modulesTitle': '四个模块',
+  'admissions.mainlandTrack': '内地大学',
+  'admissions.mainlandTrackNote':
+    '两条官方渠道：教育部文凭试收生计划与全国联招。等级制标准、报名与录取全流程。',
+  'admissions.overseasTrack': '境外大学',
+  'admissions.overseasTrackNote':
+    '香港、英国、美国、加拿大、澳大利亚、新加坡的录取方式、评估侧重与时间结构。',
+  'admissions.methodTitle': '我们如何处理分数',
+  'admissions.methodBody':
+    '录取分数是时效性最强的教育信息，也是最容易被编造的一类。本板块只发布可追溯到官方一手来源的数字，并标注适用学年与核验日期；尚未核对完成的条目会公开标记为「待核验」，而不是填一个看起来合理的数值。',
+  'admissions.roadmapTitle': '接下来会补上的',
+  'admissions.roadmapScores': '院校与专业分数线',
+  'admissions.roadmapScoresNote': '按院校、专业、体系与年份整理的录取分数数据库。',
+  'admissions.roadmapInstitutions': '院校信息',
+  'admissions.roadmapInstitutionsNote': '院校介绍、专业设置、录取要求与就业方向。',
+  'admissions.roadmapPlanner': '路径规划工具',
+  'admissions.roadmapPlannerNote': '按年级与目标规划考试节点与申请节奏。',
+
+  // Overseas admissions ---------------------------------------------------
+  'overseas.title': '境外升学',
+  'overseas.lede':
+    '境外升学的核心差异不在分数，而在录取方式：有的看统一申请平台的志愿顺序，有的看整体评估，有的按公开换算表排名。',
+  'overseas.structuralNote':
+    '本页只说明各目的地的录取方式与评估侧重，不列出具体分数线——分数按院校与专业逐年公布，且必须以院校官方文件为准。',
+  'overseas.route': '录取方式',
+  'overseas.focus': '评估侧重',
+  'overseas.timing': '时间结构',
+  'overseas.verify': '官方核对入口',
+  'overseas.systemsTitle': '相关教育体系',
+  'overseas.roadmapTitle': '接下来会补上的',
+  'overseas.roadmapBody':
+    '英国资历换算与院校入学要求、美国院校的整体评估与标化政策、以及各目的地的语言成绩门槛，会按院校批量核对后陆续录入录取要求台帐。',
+
+  // Resources: planned modules --------------------------------------------
+  'resources.futureTitle': '规划中的模块',
+  'resources.futureBody':
+    '资源中心目前是索引式资源。随着流量增长，这里会逐步增加可下载资料与在线内容；架构上已为这些能力预留位置。',
+  'resources.downloads': '资料下载',
+  'resources.downloadsNote': '课程大纲、考试时间表、报名流程清单等可下载文件。',
+  'resources.courses': '在线课程与专栏',
+  'resources.coursesNote': '按体系与科目组织的系统化内容。',
+  'resources.membership': '会员与付费内容',
+  'resources.membershipNote': '深度报告与工具的使用权限，第一阶段不实现支付。',
 
   // Requirements hub ------------------------------------------------------
   'requirements.title': '录取要求',
@@ -536,6 +601,8 @@ const en: Record<UIKey, string> = {
   'home.s1.title2': 'Many pathways.',
   'home.s1.body':
     'Different systems, different structures, different destinations. We organise them inside one framework so the differences can be read side by side instead of guessed at.',
+  'home.s2exams.title1': 'An exam is an assessment,',
+  'home.s2exams.title2': 'not a curriculum.',
   'home.s2.label': 'Education map',
   'home.s2.title': 'From student to future.',
   'home.s2.body':
@@ -803,6 +870,81 @@ const en: Record<UIKey, string> = {
   // Navigation additions --------------------------------------------------
   'nav.china': 'Mainland routes',
   'nav.requirements': 'Requirements',
+  'nav.admissions': 'Admissions',
+  'nav.overseas': 'Overseas',
+
+  // Section navigation & section hub notes --------------------------------
+  'sectionNav.label': 'In this section',
+  'sectionNote.systemsOverview':
+    'Each international curriculum explained: structure, assessment and where it leads.',
+  'sectionNote.compare': 'Place 2–4 systems side by side across the same dimensions.',
+  'sectionNote.examsOverview':
+    'Admissions tests separated from language tests, and how they relate to curricula.',
+  'sectionNote.pathways':
+    'Route relationships between education systems and destinations worldwide.',
+  'sectionNote.mainland':
+    'The two official mainland routes, their key standards and the official timeline.',
+  'sectionNote.overseas':
+    'How Hong Kong, the UK, the US, Canada, Australia and Singapore each select students.',
+  'sectionNote.requirements':
+    'A traceable ledger of admission requirements — each with year, source and status.',
+  'sectionNote.guides': 'Columns written around the questions students and parents actually ask.',
+  'sectionNote.resources':
+    'An index of official sources, plus the material and courses to come.',
+
+  // Admissions section hub ------------------------------------------------
+  'admissions.title': 'Admissions',
+  'admissions.lede':
+    'From "where to" to "what score" — admissions is not a single decision but a chain with two tracks and four modules.',
+  'admissions.tracksTitle': 'Two tracks',
+  'admissions.modulesTitle': 'Four modules',
+  'admissions.mainlandTrack': 'Mainland universities',
+  'admissions.mainlandTrackNote':
+    'Two official routes: the MOE DSE admission scheme and the national joint enrolment examination.',
+  'admissions.overseasTrack': 'Universities abroad',
+  'admissions.overseasTrackNote':
+    'How Hong Kong, the UK, the US, Canada, Australia and Singapore each select and assess applicants.',
+  'admissions.methodTitle': 'How we treat scores',
+  'admissions.methodBody':
+    'Admission scores are the most time-sensitive — and the most easily fabricated — education information there is. This section publishes only figures traceable to an official primary source, each stamped with its academic year and verification date. Anything not yet checked is shown as an explicit gap rather than filled with a plausible number.',
+  'admissions.roadmapTitle': 'Still to come',
+  'admissions.roadmapScores': 'Institution and programme cut-offs',
+  'admissions.roadmapScoresNote':
+    'A cut-off database organised by institution, programme, system and year.',
+  'admissions.roadmapInstitutions': 'Institution profiles',
+  'admissions.roadmapInstitutionsNote':
+    'Institutional profiles, programme offerings, entry requirements and career outcomes.',
+  'admissions.roadmapPlanner': 'Pathway planner',
+  'admissions.roadmapPlannerNote':
+    'Plan examination and application milestones by school year and destination.',
+
+  // Overseas admissions ---------------------------------------------------
+  'overseas.title': 'Overseas admissions',
+  'overseas.lede':
+    'The real difference between destinations is not the score — it is the selection model: a centralised platform, a holistic review, or a published conversion scale.',
+  'overseas.structuralNote':
+    'This page describes selection models and assessment emphasis only. It publishes no cut-off scores: those are released per institution and programme, year by year, and the institution document is authoritative.',
+  'overseas.route': 'Selection model',
+  'overseas.focus': 'What is weighted',
+  'overseas.timing': 'Timing structure',
+  'overseas.verify': 'Where to verify',
+  'overseas.systemsTitle': 'Related education systems',
+  'overseas.roadmapTitle': 'Still to come',
+  'overseas.roadmapBody':
+    'UK qualification tariff and institutional entry requirements, US holistic review and testing policies, and language thresholds by destination — all to be verified institution by institution before entering the requirements ledger.',
+
+  // Resources: planned modules --------------------------------------------
+  'resources.futureTitle': 'Planned modules',
+  'resources.futureBody':
+    'The resource centre is an index today. As traffic grows it will carry downloadable material and online content; the architecture already reserves room for both.',
+  'resources.downloads': 'Downloads',
+  'resources.downloadsNote':
+    'Syllabuses, examination timetables and application checklists as files.',
+  'resources.courses': 'Courses & columns',
+  'resources.coursesNote': 'Structured material organised by system and subject.',
+  'resources.membership': 'Membership & premium content',
+  'resources.membershipNote':
+    'Access to in-depth reports and tools. Payment is deliberately not implemented in phase one.',
 
   // Requirements hub ------------------------------------------------------
   'requirements.title': 'Admission requirements',

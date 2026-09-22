@@ -11,6 +11,7 @@
  */
 
 import type { Locale } from '@/i18n/ui';
+import { routes } from './routes';
 
 export interface PathwayDestination {
   /** Stable key used in frontmatter. */
@@ -111,7 +112,10 @@ export function getPathway(id: string): PathwayDestination | undefined {
   return pathwaysById.get(id);
 }
 
-/** Anchor used to deep-link a system page to a destination on /pathways. */
+/**
+ * Anchor used to deep-link a system page to a destination on the pathways page.
+ * Path comes from the route registry so a section move never leaves a dead link.
+ */
 export function pathwayAnchor(id: string): string {
-  return `/pathways#${id}`;
+  return `${routes.pathways}#${id}`;
 }

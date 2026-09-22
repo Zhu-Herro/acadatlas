@@ -2,13 +2,19 @@
 /**
  * Home page.
  *
- * Narrative order (brief, sections 7 / 31):
- *   Hero → intro → 01 Education systems → Education map →
- *   02 Explore systems → 03 Pathways → 04 Guides → 05 Explore (search) →
- *   closing statement
+ * The narrative now mirrors the information architecture one-for-one, so the
+ * reader learns the structure of the platform by scrolling:
  *
- * The page reads as one story rather than a list of articles: each block ends
- * by pointing at the next.
+ *   Hero → intro →
+ *   01 Education systems (plate + taxonomy + the education chain) →
+ *   02 Examinations (the distinction the platform is built on) →
+ *   03 Admissions (two tracks, four modules — the biggest block) →
+ *   04 Guides →
+ *   05 Resources (sources + what is coming) →
+ *   Explore (search) → closing statement
+ *
+ * Section labels and numbering come from `src/data/routes.ts`, so a change to
+ * the section model cannot leave the home page out of step.
  */
 import { getCollection } from 'astro:content';
 import BaseLayout from '@/layouts/BaseLayout.astro';
@@ -16,9 +22,10 @@ import Hero from '@/components/Hero.astro';
 import SectionHeader from '@/components/SectionHeader.astro';
 import EducationChain from '@/components/EducationChain.astro';
 import PathwayDiagram from '@/components/PathwayDiagram.astro';
-import SystemCard from '@/components/SystemCard.astro';
 import EditorialList from '@/components/EditorialList.astro';
 import { site } from '@/site.config';
+import { routes, sections } from '@/data/routes';
+import { listOfficialBodies } from '@/lib/sources';
 import { entrySlug, inLocale, sortEntries } from '@/lib/content';
 import { localizePath, useTranslations, type Locale } from '@/i18n/utils';
 import { buildSeo } from '@/lib/seo';
@@ -32,14 +39,20 @@ const { locale } = Astro.props;
 const t = useTranslations(locale);
 
 const systems = sortEntries(inLocale(await getCollection('systems'), locale));
+const exams = sortEntries(inLocale(await getCollection('exams'), locale));
 const guides = sortEntries(inLocale(await getCollection('guides'), locale));
 
-const featuredSystems = systems.filter((entry) => entry.data.featured).slice(0, 3);
-const shownSystems = featuredSystems.length > 0 ? featuredSystems : systems.slice(0, 3);
+const sectionNumber = (id: string) => sections.find((s) => s.id === id)?.number ?? '';
+const admissionsSection = sections.find((s) => s.id === 'admissions');
+const admissionsModules = (admissionsSection?.children ?? []).filter(
+  (child) => child.href !== routes.admissions,
+);
+
 const featuredGuides = guides.filter((entry) => entry.data.featured).slice(0, 4);
 const shownGuides = featuredGuides.length > 0 ? featuredGuides : guides.slice(0, 4);
 
-const href = (base: string, slug: string) => localizePath(`${base}/${slug}`, locale);
+/** A short preview of the source registry, to evidence the trust claim. */
+const sources = listOfficialBodies().slice(0, 6);
 
 /** Category taxonomy — brief, section 8: never conflate these four things. */
 const taxonomy: { key: UIKey; noteKey: UIKey }[] = [
@@ -53,7 +66,7 @@ const seo = buildSeo({
   title: site.name,
   description: site.description[locale],
   locale,
-  path: '/',
+  path: routes.home,
 });
 ---
 
@@ -66,11 +79,7 @@ const seo = buildSeo({
       <div class="grid gap-12 lg:grid-cols-12 lg:gap-x-16">
         <div class="lg:col-span-5">
           <p data-reveal="fade" class="eyebrow eyebrow-accent">{t('home.intro.label')}</p>
-          <h2
-            id="intro-title"
-            data-stagger
-            class="mt-7 font-display text-h1 text-ink"
-          >
+          <h2 id="intro-title" data-stagger class="mt-7 font-display text-h1 text-ink">
             <span class="block">{t('home.intro.title1')}</span>
             <span class="block">{t('home.intro.title2')}</span>
           </h2>
@@ -81,34 +90,40 @@ const seo = buildSeo({
             {t('home.intro.body')}
           </p>
 
-          <ul class="mt-12 grid gap-x-8 gap-y-6 sm:grid-cols-3">
+          <!-- The five sections, stated up front as a table of contents -->
+          <ol class="mt-12 flex flex-col border-t border-rule" data-reveal="up">
             {
-              ['home.intro.point1', 'home.intro.point2', 'home.intro.point3'].map(
-                (key, index) => (
-                  <li
-                    data-reveal="up"
-                    style={`--reveal-delay:${index * 80}ms`}
-                    class="border-t border-rule pt-4"
+              sections.map((section) => (
+                <li class="border-b border-rule">
+                  <a
+                    href={localizePath(section.href, locale)}
+                    class="group grid grid-cols-[3rem_1fr_auto] items-baseline gap-x-5 py-3.5"
                   >
-                    <span class="font-mono text-micro text-accent tabnum">
-                      {String(index + 1).padStart(2, '0')}
+                    <span class="font-mono text-micro text-accent tabnum">{section.number}</span>
+                    <span class="text-caption text-charcoal transition-colors duration-300 group-hover:text-accent">
+                      {t(section.key)}
                     </span>
-                    <p class="mt-3 text-h4 text-ink">{t(key as UIKey)}</p>
-                  </li>
-                ),
-              )
+                    <span
+                      aria-hidden="true"
+                      class="font-mono text-micro text-mist transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1 group-hover:text-accent"
+                    >
+                      →
+                    </span>
+                  </a>
+                </li>
+              ))
             }
-          </ul>
+          </ol>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ── 01 / Education systems — the typographic index plate ────────── -->
+  <!-- ── 01 / Education systems ─────────────────────────────────────── -->
   <section class="u-section edge-rule" aria-labelledby="systems-plate-title">
     <div class="u-container">
       <SectionHeader
-        number="01"
+        number={sectionNumber('systems')}
         label={t('home.s1.label')}
         title={[t('home.s1.title1'), t('home.s1.title2')]}
         lede={t('home.s1.body')}
@@ -121,7 +136,7 @@ const seo = buildSeo({
           systems.map((entry, index) => (
             <li class="border-b border-rule">
               <a
-                href={href('/systems', entrySlug(entry))}
+                href={localizePath(routes.system(entrySlug(entry)), locale)}
                 class="group grid grid-cols-1 items-baseline gap-x-8 gap-y-3 py-6 sm:grid-cols-[3rem_minmax(0,1fr)_auto] lg:py-7"
               >
                 <span class="font-mono text-micro text-mist tabnum">
@@ -151,11 +166,7 @@ const seo = buildSeo({
         <ul class="mt-8 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
           {
             taxonomy.map((item, index) => (
-              <li
-                data-reveal="up"
-                style={`--reveal-delay:${index * 70}ms`}
-                class="border-t border-rule pt-5"
-              >
+              <li data-reveal="up" style={`--reveal-delay:${index * 70}ms`} class="border-t border-rule pt-5">
                 <p class="text-h4 text-ink">{t(item.key)}</p>
                 <p class="mt-2.5 text-caption leading-relaxed text-graphite">{t(item.noteKey)}</p>
               </li>
@@ -163,78 +174,173 @@ const seo = buildSeo({
           }
         </ul>
       </div>
-    </div>
-  </section>
 
-  <!-- ── Education map ──────────────────────────────────────────────── -->
-  <section class="u-section edge-rule" aria-labelledby="map-title">
-    <div class="u-container">
-      <SectionHeader
-        number="01.5"
-        label={t('home.s2.label')}
-        title={t('home.s2.title')}
-        lede={t('home.s2.body')}
-        id="map-title"
-      />
-      <div class="mt-16">
-        <EducationChain locale={locale} />
+      <!-- The chain every system shares -->
+      <div class="mt-20">
+        <h3 data-reveal="fade" class="eyebrow">{t('home.s2.label')}</h3>
+        <p data-reveal="up" class="mt-5 max-w-xl font-display text-h3 text-ink">
+          {t('home.s2.title')}
+        </p>
+        <div class="mt-12">
+          <EducationChain locale={locale} />
+        </div>
+      </div>
+
+      <div class="mt-14 flex flex-wrap items-baseline gap-x-8 gap-y-3">
+        <a href={localizePath(routes.systems, locale)} class="link-underline font-mono text-micro uppercase tracking-[0.16em]">
+          {t('common.viewAll')} →
+        </a>
+        <a href={localizePath(routes.compare, locale)} class="link-underline font-mono text-micro uppercase tracking-[0.16em]">
+          {t('compare.title')} →
+        </a>
       </div>
     </div>
   </section>
 
-  <!-- ── 02 / Explore systems ───────────────────────────────────────── -->
-  <section class="u-section edge-rule" aria-labelledby="explore-systems-title">
+  <!-- ── 02 / Examinations ──────────────────────────────────────────── -->
+  <section class="u-section edge-rule" aria-labelledby="exams-title">
     <div class="u-container">
       <SectionHeader
-        number="02"
-        label={t('systems.title')}
-        title={t('systems.title')}
-        lede={t('systems.lede')}
-        id="explore-systems-title"
+        number={sectionNumber('exams')}
+        label={t('exams.title')}
+        title={[t('home.s2exams.title1'), t('home.s2exams.title2')]}
+        lede={t('exams.lede')}
+        id="exams-title"
       />
 
-      <div class="mt-16 grid gap-x-12 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+      <ul class="mt-16 flex flex-col border-t border-rule" data-stagger>
         {
-          shownSystems.map((entry, index) => (
-            <SystemCard
-              name={entry.data.title}
-              shortName={entry.data.shortName}
-              fullName={entry.data.fullName}
-              summary={entry.data.summary}
-              region={entry.data.region}
-              type={entry.data.type}
-              href={href('/systems', entrySlug(entry))}
-              locale={locale}
-              index={index}
-            />
+          exams.map((entry, index) => (
+            <li class="border-b border-rule">
+              <a
+                href={localizePath(routes.exam(entrySlug(entry)), locale)}
+                class="group grid grid-cols-1 gap-x-10 gap-y-3 py-6 lg:grid-cols-[3rem_minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-baseline"
+              >
+                <span class="font-mono text-micro text-mist tabnum">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <span class="flex flex-col gap-2">
+                  <span class="font-display text-h3 leading-none text-ink transition-colors duration-300 group-hover:text-accent">
+                    {entry.data.shortName}
+                  </span>
+                  <span class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                    {entry.data.family === 'language'
+                      ? t('exams.familyLanguage')
+                      : t('exams.familyStandardised')}
+                  </span>
+                </span>
+                <span class="max-w-lg text-caption leading-relaxed text-charcoal">
+                  {entry.data.summary}
+                </span>
+                <span
+                  aria-hidden="true"
+                  class="font-mono text-caption text-mist transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1.5 group-hover:text-accent"
+                >
+                  →
+                </span>
+              </a>
+            </li>
           ))
         }
-      </div>
+      </ul>
 
       <p class="mt-14">
-        <a
-          href={localizePath('/systems', locale)}
-          class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
-        >
-          {t('common.viewAll')} →
+        <a href={localizePath(routes.exams, locale)} class="link-underline font-mono text-micro uppercase tracking-[0.16em]">
+          {t('exams.title')} →
         </a>
       </p>
     </div>
   </section>
 
-  <!-- ── 03 / Pathways ──────────────────────────────────────────────── -->
-  <section class="u-section edge-rule" aria-labelledby="pathways-title">
+  <!-- ── 03 / Admissions — the largest block ────────────────────────── -->
+  <section class="u-section edge-rule" aria-labelledby="admissions-title">
     <div class="u-container">
       <SectionHeader
-        number="03"
-        label={t('pathways.title')}
+        number={sectionNumber('admissions')}
+        label={t('admissions.title')}
         title={[t('home.s3.title1'), t('home.s3.title2')]}
-        lede={t('home.s3.body')}
-        id="pathways-title"
+        lede={t('admissions.lede')}
+        id="admissions-title"
       />
-      <div class="mt-16">
-        <PathwayDiagram locale={locale} />
+
+      <!-- Two tracks -->
+      <div class="mt-16 grid gap-x-12 gap-y-10 lg:grid-cols-2">
+        {
+          (
+            [
+              { key: 'admissions.mainlandTrack', noteKey: 'admissions.mainlandTrackNote', href: routes.mainland },
+              { key: 'admissions.overseasTrack', noteKey: 'admissions.overseasTrackNote', href: routes.overseas },
+            ] as { key: UIKey; noteKey: UIKey; href: string }[]
+          ).map((track, index) => (
+            <article
+              data-reveal="up"
+              style={`--reveal-delay:${index * 80}ms`}
+              class="flex flex-col border-t border-ink pt-6"
+            >
+              <h3 class="font-display text-h3 text-ink">
+                <a href={localizePath(track.href, locale)} class="transition-colors duration-300 hover:text-accent">
+                  {t(track.key)}
+                </a>
+              </h3>
+              <p class="mt-4 flex-1 text-caption leading-relaxed text-graphite">{t(track.noteKey)}</p>
+              <a
+                href={localizePath(track.href, locale)}
+                class="link-underline mt-6 self-start font-mono text-micro uppercase tracking-[0.16em]"
+              >
+                {t('common.explore')} →
+              </a>
+            </article>
+          ))
+        }
       </div>
+
+      <!-- Four modules, numbered to match the section hub -->
+      <ol class="mt-16 flex flex-col border-t border-rule" data-stagger>
+        {
+          admissionsModules.map((module, index) => (
+            <li class="border-b border-rule">
+              <a
+                href={localizePath(module.href, locale)}
+                class="group grid grid-cols-[4rem_1fr_auto] items-baseline gap-x-5 py-5"
+              >
+                <span class="font-mono text-micro text-accent tabnum">
+                  {sectionNumber('admissions')}.{index + 1}
+                </span>
+                <span class="flex flex-col gap-1.5">
+                  <span class="text-h4 text-ink transition-colors duration-300 group-hover:text-accent">
+                    {t(module.key)}
+                  </span>
+                  {module.noteKey && (
+                    <span class="max-w-xl text-caption leading-relaxed text-graphite">
+                      {t(module.noteKey)}
+                    </span>
+                  )}
+                </span>
+                <span
+                  aria-hidden="true"
+                  class="font-mono text-caption text-mist transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1.5 group-hover:text-accent"
+                >
+                  →
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+
+      <!-- The route map -->
+      <div class="mt-20">
+        <h3 data-reveal="fade" class="eyebrow">{t('pathways.flowLabel')}</h3>
+        <div class="mt-10">
+          <PathwayDiagram locale={locale} />
+        </div>
+      </div>
+
+      <p class="mt-14">
+        <a href={localizePath(routes.admissions, locale)} class="link-underline font-mono text-micro uppercase tracking-[0.16em]">
+          {t('admissions.title')} →
+        </a>
+      </p>
     </div>
   </section>
 
@@ -242,7 +348,7 @@ const seo = buildSeo({
   <section class="u-section edge-rule" aria-labelledby="guides-title">
     <div class="u-container">
       <SectionHeader
-        number="04"
+        number={sectionNumber('guides')}
         label={t('guides.title')}
         title={[t('home.s4.title1'), t('home.s4.title2')]}
         lede={t('home.s4.lede')}
@@ -254,7 +360,7 @@ const seo = buildSeo({
         locale={locale}
         emphasis="large"
         items={shownGuides.map((entry) => ({
-          href: href('/guides', entrySlug(entry)),
+          href: localizePath(routes.guide(entrySlug(entry)), locale),
           title: entry.data.title,
           summary: entry.data.summary,
           meta: [t('common.readingMinutes', { minutes: entry.data.readingMinutes })],
@@ -262,17 +368,82 @@ const seo = buildSeo({
       />
 
       <p class="mt-12">
-        <a
-          href={localizePath('/guides', locale)}
-          class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
-        >
+        <a href={localizePath(routes.guides, locale)} class="link-underline font-mono text-micro uppercase tracking-[0.16em]">
           {t('common.viewAll')} →
         </a>
       </p>
     </div>
   </section>
 
-  <!-- ── 05 / Explore (search) ──────────────────────────────────────── -->
+  <!-- ── 05 / Resources ─────────────────────────────────────────────── -->
+  <section class="u-section edge-rule" aria-labelledby="resources-title">
+    <div class="u-container">
+      <SectionHeader
+        number={sectionNumber('resources')}
+        label={t('resources.title')}
+        title={t('resources.title')}
+        lede={t('resources.lede')}
+        id="resources-title"
+      />
+
+      <ul class="mt-16 grid gap-x-10 gap-y-0 sm:grid-cols-2 lg:grid-cols-3">
+        {
+          sources.map((source, index) => (
+            <li data-reveal="up" style={`--reveal-delay:${(index % 3) * 60}ms`} class="border-t border-rule">
+              <a
+                href={source.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group flex items-start justify-between gap-4 py-5"
+              >
+                <span class="text-caption leading-snug text-ink transition-colors duration-300 group-hover:text-accent">
+                  {source.label}
+                </span>
+                <span
+                  aria-hidden="true"
+                  class="mt-0.5 shrink-0 font-mono text-micro text-mist transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent"
+                >
+                  ↗
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+
+      <div class="mt-16 grid gap-8 sm:grid-cols-3">
+        {
+          (
+            [
+              { key: 'resources.downloads', noteKey: 'resources.downloadsNote' },
+              { key: 'resources.courses', noteKey: 'resources.coursesNote' },
+              { key: 'resources.membership', noteKey: 'resources.membershipNote' },
+            ] as { key: UIKey; noteKey: UIKey }[]
+          ).map((item, index) => (
+            <div
+              data-reveal="up"
+              style={`--reveal-delay:${index * 70}ms`}
+              class="border-t border-dashed border-rule pt-5"
+            >
+              <p class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                {t('common.futureModule')}
+              </p>
+              <p class="mt-3 text-h4 text-ink">{t(item.key)}</p>
+              <p class="mt-2 text-caption leading-relaxed text-graphite">{t(item.noteKey)}</p>
+            </div>
+          ))
+        }
+      </div>
+
+      <p class="mt-14">
+        <a href={localizePath(routes.resources, locale)} class="link-underline font-mono text-micro uppercase tracking-[0.16em]">
+          {t('resources.title')} →
+        </a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Explore (search) ───────────────────────────────────────────── -->
   <section class="u-section edge-rule" aria-labelledby="search-entry-title">
     <div class="u-container">
       <div class="grid gap-12 lg:grid-cols-12 lg:gap-x-16">
@@ -301,21 +472,6 @@ const seo = buildSeo({
               {t('home.s5.cta')}
             </span>
           </button>
-
-          <ul class="mt-10 flex flex-wrap gap-x-8 gap-y-3">
-            {
-              ['/systems', '/exams', '/pathways', '/guides', '/resources'].map((path) => (
-                <li>
-                  <a
-                    href={localizePath(path, locale)}
-                    class="font-mono text-micro uppercase tracking-[0.14em] text-graphite transition-colors duration-300 hover:text-accent"
-                  >
-                    {path}
-                  </a>
-                </li>
-              ))
-            }
-          </ul>
         </div>
       </div>
     </div>
@@ -327,18 +483,11 @@ const seo = buildSeo({
       <p data-reveal="up" class="eyebrow">
         {site.name}
       </p>
-      <p
-        data-reveal="up"
-        style="--reveal-delay:120ms"
-        class="mt-8 max-w-4xl font-display text-display text-ink"
-      >
+      <p data-reveal="up" style="--reveal-delay:120ms" class="mt-8 max-w-4xl font-display text-display text-ink">
         {site.tagline[locale]}
       </p>
       <p data-reveal="up" style="--reveal-delay:220ms" class="mt-10">
-        <a
-          href={localizePath('/about', locale)}
-          class="link-underline font-mono text-micro uppercase tracking-[0.16em]"
-        >
+        <a href={localizePath(routes.about, locale)} class="link-underline font-mono text-micro uppercase tracking-[0.16em]">
           {t('about.title')} →
         </a>
       </p>

@@ -7,7 +7,7 @@
  */
 import Logo from './Logo.astro';
 import { site } from '@/site.config';
-import { footerAbout, footerBrowse } from '@/data/navigation';
+import { footerAbout, footerAdmissions, footerBrowse } from '@/data/navigation';
 import { localizePath, useTranslations, type Locale } from '@/i18n/utils';
 
 interface Props {
@@ -21,7 +21,7 @@ const year = new Date().getFullYear();
 
 <footer class="edge-rule mt-0 bg-paper">
   <div class="u-container py-16 sm:py-20">
-    <div class="grid gap-14 lg:grid-cols-[1.4fr_1fr_1fr] lg:gap-10">
+    <div class="grid gap-14 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr] lg:gap-10">
       <!-- Brand column -->
       <div data-reveal="up" class="max-w-sm">
         <Logo locale={locale} size="lg" />
@@ -45,6 +45,24 @@ const year = new Date().getFullYear();
         <ul class="mt-6 flex flex-col gap-3.5">
           {
             footerBrowse.map((item) => (
+              <li>
+                <a
+                  href={localizePath(item.href, locale)}
+                  class="text-caption text-charcoal transition-colors duration-300 hover:text-accent"
+                >
+                  {t(item.key)}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      <nav aria-label={t('nav.admissions')} data-reveal="up" style="--reveal-delay:120ms">
+        <h2 class="eyebrow">{t('nav.admissions')}</h2>
+        <ul class="mt-6 flex flex-col gap-3.5">
+          {
+            footerAdmissions.map((item) => (
               <li>
                 <a
                   href={localizePath(item.href, locale)}

@@ -135,6 +135,18 @@ export const officialBodies: Record<string, SourceLink> = {
     label: 'Common App',
     href: 'https://www.commonapp.org/',
   },
+  educanada: {
+    label: '加拿大政府 — EduCanada 官方留学门户',
+    href: 'https://www.educanada.ca/',
+  },
+  studyAustralia: {
+    label: '澳大利亚政府 — Study Australia',
+    href: 'https://www.studyinaustralia.gov.au/',
+  },
+  moeSingapore: {
+    label: '新加坡教育部 (Ministry of Education, Singapore)',
+    href: 'https://www.moe.gov.sg/',
+  },
   moe: {
     label: '中华人民共和国教育部 (Ministry of Education, PRC)',
     href: 'https://www.moe.gov.cn/',

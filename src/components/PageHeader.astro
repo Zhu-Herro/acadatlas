@@ -6,6 +6,7 @@
  * large editorial title, lede, and optional right-hand metadata column.
  */
 import Breadcrumb, { type Crumb } from './Breadcrumb.astro';
+import SectionNav from './SectionNav.astro';
 import { useTranslations, type Locale } from '@/i18n/utils';
 
 interface Props {
@@ -85,3 +86,10 @@ const lines = Array.isArray(title) ? title : [title];
     </div>
   </div>
 </header>
+
+<!--
+  Second level of the information architecture. Rendered here rather than in
+  each view so that every section page shows its siblings consistently, and so
+  the global header can stay at five items.
+-->
+<SectionNav locale={locale} />

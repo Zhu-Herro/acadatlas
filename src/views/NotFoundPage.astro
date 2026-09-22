@@ -22,12 +22,14 @@ const seo = buildSeo({
   noindex: true,
 });
 
+/** Mirrors the section model, so the wayfinding matches the navigation. */
 const suggestions = [
   { href: '/systems', label: t('systems.title') },
   { href: '/exams', label: t('exams.title') },
-  { href: '/pathways', label: t('pathways.title') },
+  { href: '/admissions', label: t('admissions.title') },
+  { href: '/admissions/mainland', label: t('china.title') },
+  { href: '/admissions/requirements', label: t('requirements.title') },
   { href: '/guides', label: t('guides.title') },
-  { href: '/compare', label: t('compare.title') },
   { href: '/resources', label: t('resources.title') },
 ];
 ---

@@ -16,7 +16,7 @@ import { requirements, requirementRoutes, routeLabel } from '@/data/requirements
 import { resolveSource } from '@/lib/sources';
 import { buildIntegrityReport } from '@/lib/integrity';
 import { verificationPointers } from '@/data/chinaRoutes';
-import { useTranslations, type Locale } from '@/i18n/utils';
+import { localizePath, useTranslations, type Locale } from '@/i18n/utils';
 import { breadcrumbSchema, buildSeo } from '@/lib/seo';
 
 interface Props {
@@ -49,12 +49,13 @@ const seo = buildSeo({
   title: t('requirements.title'),
   description: t('requirements.lede'),
   locale,
-  path: '/requirements',
+  path: '/admissions/requirements',
   jsonLd: [
     breadcrumbSchema(
       [
         { name: t('common.home'), path: '/' },
-        { name: t('requirements.title'), path: '/requirements' },
+        { name: t('admissions.title'), path: '/admissions' },
+        { name: t('requirements.title'), path: '/admissions/requirements' },
       ],
       locale,
     ),
@@ -65,13 +66,14 @@ const seo = buildSeo({
 <BaseLayout locale={locale} seo={seo}>
   <PageHeader
     locale={locale}
-    number="09"
-    eyebrow={t('nav.requirements')}
+    number="03.4"
+    eyebrow={t('nav.admissions')}
     title={[t('requirements.title')]}
     lede={t('requirements.lede')}
     crumbs={[
       { name: t('common.home'), path: '/' },
-      { name: t('requirements.title'), path: '/requirements' },
+      { name: t('admissions.title'), path: '/admissions' },
+      { name: t('requirements.title'), path: '/admissions/requirements' },
     ]}
   >
     <div slot="aside" class="mt-8 flex flex-col gap-3 border-t border-rule pt-5">
@@ -329,11 +331,11 @@ const seo = buildSeo({
           </ul>
 
           <p class="mt-10 flex flex-wrap items-baseline gap-x-8 gap-y-3">
-            <a href={locale === 'zh' ? '/china' : '/en/china'} class="link-underline font-mono text-micro uppercase tracking-[0.16em]">
+            <a href={localizePath('/admissions/mainland', locale)} class="link-underline font-mono text-micro uppercase tracking-[0.16em]">
               {t('china.title')} →
             </a>
-            <a href={locale === 'zh' ? '/guides' : '/en/guides'} class="link-underline font-mono text-micro uppercase tracking-[0.16em]">
-              {t('guides.title')} →
+            <a href={localizePath('/admissions', locale)} class="link-underline font-mono text-micro uppercase tracking-[0.16em]">
+              {t('admissions.title')} →
             </a>
           </p>
         </div>

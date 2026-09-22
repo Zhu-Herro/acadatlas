@@ -12,6 +12,7 @@
 import Logo from './Logo.astro';
 import LanguageSwitcher from './LanguageSwitcher.astro';
 import { primaryNav, secondaryNav } from '@/data/navigation';
+import { sections } from '@/data/routes';
 import { localizePath, stripLocale, useTranslations, type Locale } from '@/i18n/utils';
 
 interface Props {
@@ -25,8 +26,6 @@ const currentPath = stripLocale(Astro.url.pathname);
 const isActive = (href: string) =>
   href === '/' ? currentPath === '/' : currentPath === href || currentPath.startsWith(`${href}/`);
 
-/** Combined list for the mobile drawer, numbered as one sequence. */
-const drawerNav = [...primaryNav, ...secondaryNav];
 ---
 
 <header
@@ -118,19 +117,60 @@ const drawerNav = [...primaryNav, ...secondaryNav];
   class="fixed inset-0 z-40 lg:hidden bg-paper"
 >
   <div class="u-container flex h-full flex-col pt-28 pb-10">
-    <nav class="flex-1" aria-label={t('nav.primary')}>
-      <ul data-stagger class="flex flex-col">
+    <nav class="flex-1 overflow-y-auto" aria-label={t('nav.primary')}>
+      <!--
+        Two levels, mirroring the section model: the five top-level sections,
+        with the admission sub-modules expanded inline so the hierarchy is
+        visible on mobile exactly as SectionNav shows it on desktop.
+      -->
+      <ul class="flex flex-col">
         {
-          drawerNav.map((item, index) => (
-            <li class="border-b border-rule">
+          sections.map((section) => {
+            const children = section.children.filter((child) => child.href !== section.href);
+
+            return (
+              <li class="border-b border-rule">
+                <a
+                  href={localizePath(section.href, locale)}
+                  class="flex items-baseline justify-between pt-5 pb-3 font-display text-h3 text-ink transition-colors duration-300 hover:text-accent"
+                >
+                  <span>{t(section.key)}</span>
+                  <span aria-hidden="true" class="font-mono text-meta text-mist tabnum">
+                    {section.number}
+                  </span>
+                </a>
+
+                {children.length > 0 && (
+                  <ul class="flex flex-wrap gap-x-6 gap-y-2.5 pb-5">
+                    {children.map((child, childIndex) => (
+                      <li>
+                        <a
+                          href={localizePath(child.href, locale)}
+                          class="font-mono text-micro uppercase tracking-[0.14em] text-graphite transition-colors duration-300 hover:text-accent"
+                        >
+                          {section.number}.{childIndex + 1} {t(child.key)}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {children.length === 0 && <div class="pb-5" />}
+              </li>
+            );
+          })
+        }
+      </ul>
+
+      <ul class="mt-8 flex flex-wrap gap-x-8 gap-y-3">
+        {
+          secondaryNav.map((item) => (
+            <li>
               <a
                 href={localizePath(item.href, locale)}
-                class="flex items-baseline justify-between py-5 font-display text-h3 text-ink transition-colors duration-300 hover:text-accent"
+                class="font-mono text-micro uppercase tracking-[0.14em] text-graphite transition-colors duration-300 hover:text-accent"
               >
-                <span>{t(item.key)}</span>
-                <span aria-hidden="true" class="font-mono text-meta text-mist">
-                  {String(index + 1).padStart(2, '0')}
-                </span>
+                {t(item.key)}
               </a>
             </li>
           ))

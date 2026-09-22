@@ -13,6 +13,7 @@ import { entrySlug, inLocale, sortEntries } from '@/lib/content';
 import { listOfficialBodies } from '@/lib/sources';
 import { localizePath, useTranslations, type Locale } from '@/i18n/utils';
 import { breadcrumbSchema, buildSeo } from '@/lib/seo';
+import type { UIKey } from '@/i18n/ui';
 
 interface Props {
   locale: Locale;
@@ -43,6 +44,16 @@ const internal = [
     label: entry.data.title,
     meta: t('guides.title'),
   })),
+];
+
+/**
+ * Planned modules. Kept as data rather than markup so the roadmap stays honest
+ * and easy to update as each one ships.
+ */
+const futureModules: { titleKey: UIKey; noteKey: UIKey }[] = [
+  { titleKey: 'resources.downloads', noteKey: 'resources.downloadsNote' },
+  { titleKey: 'resources.courses', noteKey: 'resources.coursesNote' },
+  { titleKey: 'resources.membership', noteKey: 'resources.membershipNote' },
 ];
 
 const seo = buildSeo({
@@ -152,6 +163,42 @@ const seo = buildSeo({
           ))
         }
       </ol>
+    </div>
+  </section>
+
+  <!-- ── Planned modules: downloads, courses, membership ─────────────── -->
+  <section class="edge-rule" aria-labelledby="future-title">
+    <div class="u-container u-section">
+      <div class="grid gap-12 lg:grid-cols-12 lg:gap-x-16">
+        <div class="lg:col-span-4">
+          <h2 id="future-title" data-reveal="fade" class="eyebrow eyebrow-accent">
+            {t('resources.futureTitle')}
+          </h2>
+          <p data-reveal="up" class="mt-6 max-w-xs text-caption leading-relaxed text-graphite">
+            {t('resources.futureBody')}
+          </p>
+        </div>
+
+        <ul class="lg:col-span-8 grid gap-x-10 gap-y-10 sm:grid-cols-3">
+          {
+            futureModules.map((module, index) => (
+              <li
+                data-reveal="up"
+                style={`--reveal-delay:${index * 70}ms`}
+                class="border-t border-dashed border-rule pt-5"
+              >
+                <p class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                  {t('common.futureModule')}
+                </p>
+                <p class="mt-4 text-h4 text-ink">{t(module.titleKey)}</p>
+                <p class="mt-2.5 text-caption leading-relaxed text-graphite">
+                  {t(module.noteKey)}
+                </p>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
     </div>
   </section>
 </BaseLayout>

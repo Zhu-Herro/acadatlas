@@ -1,0 +1,231 @@
+---
+/**
+ * /admissions — the admissions section hub.
+ *
+ * Previously "pathways", "mainland" and "requirements" sat beside the systems
+ * and guides sections as equals, which made the site read as a flat list of
+ * pages. They are not equals: they are three of the four modules inside one
+ * idea. This page is that idea, stated once, and every module hangs off it.
+ *
+ * The hub also keeps the platform's editorial promise visible: it explains how
+ * scores are handled before the reader meets any of them.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import { routes, sections } from '@/data/routes';
+import { buildIntegrityReport } from '@/lib/integrity';
+import { localizePath, useTranslations, type Locale } from '@/i18n/utils';
+import { breadcrumbSchema, buildSeo } from '@/lib/seo';
+import type { UIKey } from '@/i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const section = sections.find((item) => item.id === 'admissions');
+const modules = (section?.children ?? []).filter((child) => child.href !== routes.admissions);
+
+const integrity = buildIntegrityReport();
+
+/** The two tracks the section is built around. */
+const tracks: { id: string; titleKey: UIKey; noteKey: UIKey; href: string; systems: string[] }[] = [
+  {
+    id: 'mainland',
+    titleKey: 'admissions.mainlandTrack',
+    noteKey: 'admissions.mainlandTrackNote',
+    href: routes.mainland,
+    systems: ['DSE', 'IB', 'A-Level'],
+  },
+  {
+    id: 'overseas',
+    titleKey: 'admissions.overseasTrack',
+    noteKey: 'admissions.overseasTrackNote',
+    href: routes.overseas,
+    systems: ['HK', 'UK', 'US', 'CA', 'AU', 'SG'],
+  },
+];
+
+const roadmap: { titleKey: UIKey; noteKey: UIKey }[] = [
+  { titleKey: 'admissions.roadmapScores', noteKey: 'admissions.roadmapScoresNote' },
+  { titleKey: 'admissions.roadmapInstitutions', noteKey: 'admissions.roadmapInstitutionsNote' },
+  { titleKey: 'admissions.roadmapPlanner', noteKey: 'admissions.roadmapPlannerNote' },
+];
+
+const seo = buildSeo({
+  title: t('admissions.title'),
+  description: t('admissions.lede'),
+  locale,
+  path: routes.admissions,
+  jsonLd: [
+    breadcrumbSchema(
+      [
+        { name: t('common.home'), path: routes.home },
+        { name: t('admissions.title'), path: routes.admissions },
+      ],
+      locale,
+    ),
+  ],
+});
+---
+
+<BaseLayout locale={locale} seo={seo}>
+  <PageHeader
+    locale={locale}
+    number="03"
+    eyebrow={t('nav.admissions')}
+    title={[t('admissions.title')]}
+    lede={t('admissions.lede')}
+    crumbs={[
+      { name: t('common.home'), path: routes.home },
+      { name: t('admissions.title'), path: routes.admissions },
+    ]}
+  >
+    <div slot="aside" class="mt-8 flex flex-col gap-3 border-t border-rule pt-5">
+      <p class="font-mono text-micro uppercase tracking-[0.14em] text-accent">
+        {t('requirements.verifiedCount', { count: integrity.counts.verified })}
+      </p>
+      <p class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+        {t('requirements.pendingCount', { count: integrity.counts.pending })}
+      </p>
+    </div>
+  </PageHeader>
+
+  <!-- ── Two tracks ─────────────────────────────────────────────────── -->
+  <section class="edge-rule" aria-labelledby="tracks-title">
+    <div class="u-container u-section">
+      <h2 id="tracks-title" data-reveal="fade" class="eyebrow eyebrow-accent">
+        {t('admissions.tracksTitle')}
+      </h2>
+
+      <div class="mt-14 grid gap-x-12 gap-y-14 lg:grid-cols-2">
+        {
+          tracks.map((track, index) => (
+            <article data-reveal="up" style={`--reveal-delay:${index * 90}ms`} class="flex flex-col border-t border-ink pt-7">
+              <span class="font-mono text-meta text-accent tabnum">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+
+              <h3 class="mt-5 font-display text-h2 text-ink">
+                <a href={localizePath(track.href, locale)} class="transition-colors duration-300 hover:text-accent">
+                  {t(track.titleKey)}
+                </a>
+              </h3>
+
+              <p class="mt-5 flex-1 text-body leading-relaxed text-charcoal">
+                {t(track.noteKey)}
+              </p>
+
+              <ul class="mt-7 flex flex-wrap gap-x-5 gap-y-2">
+                {track.systems.map((label) => (
+                  <li class="font-mono text-micro uppercase tracking-[0.14em] text-mist">{label}</li>
+                ))}
+              </ul>
+
+              <a
+                href={localizePath(track.href, locale)}
+                class="link-underline mt-8 self-start font-mono text-micro uppercase tracking-[0.16em]"
+              >
+                {t('common.explore')} →
+              </a>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Four modules ───────────────────────────────────────────────── -->
+  <section class="edge-rule" aria-labelledby="modules-title">
+    <div class="u-container u-section">
+      <h2 id="modules-title" data-reveal="fade" class="eyebrow eyebrow-accent">
+        {t('admissions.modulesTitle')}
+      </h2>
+
+      <ol class="mt-14 flex flex-col border-t border-rule">
+        {
+          modules.map((module, index) => (
+            <li class="border-b border-rule" data-reveal="up" style={`--reveal-delay:${index * 55}ms`}>
+              <a
+                href={localizePath(module.href, locale)}
+                class="group grid grid-cols-[auto_1fr_auto] items-baseline gap-x-6 gap-y-2 py-7 sm:gap-x-10"
+              >
+                <span class="font-mono text-meta text-accent tabnum">
+                  03.{index + 1}
+                </span>
+
+                <span class="flex flex-col gap-2.5">
+                  <span class="font-display text-h3 text-ink transition-colors duration-300 group-hover:text-accent">
+                    {t(module.key)}
+                  </span>
+                  {module.noteKey && (
+                    <span class="max-w-2xl text-caption leading-relaxed text-graphite">
+                      {t(module.noteKey)}
+                    </span>
+                  )}
+                </span>
+
+                <span
+                  aria-hidden="true"
+                  class="font-mono text-caption text-mist transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1.5 group-hover:text-accent"
+                >
+                  →
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <!-- ── How we treat scores ────────────────────────────────────────── -->
+  <section class="edge-rule" aria-labelledby="method-title">
+    <div class="u-container u-section">
+      <div class="grid gap-12 lg:grid-cols-12 lg:gap-x-16">
+        <div class="lg:col-span-4">
+          <h2 id="method-title" data-reveal="fade" class="eyebrow">
+            {t('admissions.methodTitle')}
+          </h2>
+        </div>
+        <div class="lg:col-span-8">
+          <p data-reveal="up" class="max-w-2xl text-body-lg leading-relaxed text-charcoal">
+            {t('admissions.methodBody')}
+          </p>
+          <p
+            data-reveal="up"
+            style="--reveal-delay:120ms"
+            class="mt-8 border-l border-accent pl-5 font-mono text-micro uppercase tracking-[0.14em] text-graphite"
+          >
+            {t('requirements.officialNotice')}
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Roadmap ────────────────────────────────────────────────────── -->
+  <section class="edge-rule" aria-labelledby="roadmap-title">
+    <div class="u-container u-section">
+      <h2 id="roadmap-title" data-reveal="fade" class="eyebrow">
+        {t('admissions.roadmapTitle')}
+      </h2>
+
+      <ul class="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-3">
+        {
+          roadmap.map((item, index) => (
+            <li data-reveal="up" style={`--reveal-delay:${index * 70}ms`} class="border-t border-dashed border-rule pt-5">
+              <p class="font-mono text-micro uppercase tracking-[0.14em] text-mist">
+                {t('common.futureModule')}
+              </p>
+              <p class="mt-4 text-h4 text-ink">{t(item.titleKey)}</p>
+              <p class="mt-2.5 text-caption leading-relaxed text-graphite">{t(item.noteKey)}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+</BaseLayout>
